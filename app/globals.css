@@ -6,9 +6,14 @@ html, body {
   @apply h-full overflow-auto 
 }
 
-.shadowed {
-  box-shadow: 10px 10px 5px  grey;
-  box-shadow: -5px -5px 5px  grey;
+.shadoweded {
+  box-shadow: 1px 1px 10px 1px rgb(210, 210, 210), -1px -1px 10px 1px rgb(210, 210, 210)
+  
+}
+
+.main-shadow {
+  box-shadow: 5px 15px 15px  rgb(210, 210, 210), -5px 15px 15px  rgb(210, 210, 210)
+  
 }
 
 .list-bg {

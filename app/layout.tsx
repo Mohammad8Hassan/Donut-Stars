@@ -1,6 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Navbar from './components/Navbar'
+import Image from "next/image";
+import logoBanner from '../public/logobanner3.png';
 
 
 // const inter = Inter({ subsets: ['latin'] })
@@ -18,8 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="">
       <body>
-        
-        <div className='h-full overflow-auto'>
+        {/* Header */}
+        <div className="h-1/3 border-[#dea66f] border-b-8">
+          <Image src={logoBanner} alt="logoBanner" width={undefined} quality={100}
+            className="h-full object-cover" 
+          />
+        </div>
+
+        <div className='h-full ' style={{}}>
           {children}
         </div>
         

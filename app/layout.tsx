@@ -22,11 +22,14 @@ export default function RootLayout({
     <html lang="en" className="">
       <body>
         {/* Header */}
-        <div className="h-1/3 border-[#dea66f] border-b-8">
+        {/* <div className="h-1/3 border-[#dea66f] border-b-8 z-50">
           <Image src={logoBanner} alt="logoBanner" width={undefined} quality={100}
             className="h-full object-cover" 
           />
-        </div>
+        </div> */}
+
+        {/* Navbar */}
+        <Navbar />
 
         <div className='h-full ' style={{}}>
           {children}

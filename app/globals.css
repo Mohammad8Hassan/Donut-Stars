@@ -12,7 +12,7 @@ html, body {
 }
 
 .main-shadow {
-  box-shadow: 5px 15px 15px  rgb(210, 210, 210), -5px 15px 15px  rgb(210, 210, 210)
+  box-shadow: 5px 5px 10px  rgb(210, 210, 210), -5px 5px 10px  rgb(210, 210, 210)
   
 }
 

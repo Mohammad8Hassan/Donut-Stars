@@ -54,7 +54,9 @@ export default function Home() {
   }, [selectedDonut])
 
   return (
-    <main className="min-h-full flex flex-col lg:mx-[8%] bg-white main-shadow">
+    <div className="min-h-full flex flex-col lg:mx-[5%] bg-white main-shadow gap-20 pt-4" 
+      style={{minHeight:0}}
+    >
       
       {/* Header */}
       {/* <div className="xs:max-h-[500px] xs:min-h-0 h-[200px] xs:h-auto ">
@@ -63,36 +65,46 @@ export default function Home() {
       </div> */}
 
       {/* Fresh-Order */}
-      <Section imageSrc={fresh6}>
-        <h1 className="mb-3 text-center">Our donuts are freshly baked every day to ensure the perfect balance of softness and flavor 
-          in every bite. We take pride in using only the finest ingredients, so you can enjoy donuts that are always warm, 
-          fluffy, and delicious. Whether you’re craving something classic or a unique flavor, our freshly baked donuts are 
-          the ultimate treat!
-        </h1>
+      <Section imageSrc={fresh6} height={80}>
+        <div style={{ flex: '2 1 0px', minHeight: 0, }}
+          className="overflow-clip flex flex-col items-center justify-center px-4"
+        >
+          <p className="text-center" style={{fontSize: "1.5vw"}}>
+            Our donuts are freshly baked every day to ensure the perfect balance of softness and flavor
+            in every bite. We take pride in using only the finest ingredients, so you can enjoy donuts that are always warm,
+            fluffy, and delicious. Whether you’re craving something classic or a unique flavor, our freshly baked donuts are
+            the ultimate treat!
+          </p>
+        </div>
         
-        <Link href={'/buy'}>
+        
+        <Link href={'/buy'} style={{ flex: '1 1 0px', minHeight: 0, }} className="flex flex-col items-center justify-center">
           <div
-            className="bg-items p-3 mt-6 rounded-md shadow-md hover:bg-orange-400 hover:shadow-xl">
+            className="bg-items p-3 rounded-md shadow-md hover:bg-orange-400 hover:shadow-xl"
+          >
             <p className="text-xl">Get Donuts</p>
           </div>
         </Link>
       </Section>
 
       {/* donuts */}
-      <div className="sm:max-h-[500px] sm:h-[500px] flex flex-col my-5 xs:my-0">
-        <h1 className="mx-auto mt-10">Discover our collection</h1>
+      <div className="sm:max-h-[500px] sm:h-[500px] flex flex-col">
+        <h1 className="mx-auto" style={{ fontSize: "1.5vw" }} >Discover our collection</h1>
+
         <div className="h-full xs:rounded-xl p-3 overflow-x-scroll overflow-y-clip">
           {generateDonutList()}
         </div>
       </div>
 
+
       {/* jobs */}
-      <Section imageSrc={work} title="Want to join us?">
+      <Section imageSrc={work} title="Want to join us?" height={50} mrgn={20}>
         <div className="flex flex-auto flex-col items-center justify-center h-[150px] xs:h-auto">
-          <h1 className="mb-3">Freshly baked daily</h1>
-          <h2>New sensations..</h2>
+          <h1 className="mb-3" style={{ fontSize: "1.5vw" }}>Freshly baked daily</h1>
+          <h2 style={{ fontSize: "1.5vw" }}>New sensations..</h2>
         </div>
       </Section>
+
 
       {/* footer */}
       <div className="flex xs:mt-20 my-0 lg:min-h-[450px] footer-bg">
@@ -132,6 +144,6 @@ export default function Home() {
 
       </div>
       
-    </main>
+    </div>
   )
 }

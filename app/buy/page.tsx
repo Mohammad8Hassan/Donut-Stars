@@ -1,87 +1,144 @@
+'use client'
+
 import Image from "next/image";
 import donutList from "@/donut-list";
-import footer from '@/public/bannerTrans.png'
-import { MdPhoneInTalk as Phone } from 'react-icons/md'
-import { MdEmail as Email } from 'react-icons/md'
-import { MdLocationOn as Location } from 'react-icons/md'
+import boxList from "@/box-list";
+import drinksList from "@/drinks-list";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { addItem, setQuantity } from "../store/cartSlice";
+import { CircleMinus, CirclePlus, Trash2 } from "lucide-react";
+import QuantitySelector from "../components/QuantitySelector";
+import BoxBuilder from "../components/BoxBuilder";
+import { useEffect, useState } from "react";
+import MenuItem from "../components/MenuItem";
+import QuantitySelectorBox from "../components/QuantitySelectorBox";
+import { IBoxItem, ICartItem } from "@/types";
 
 export default function Buy() {
+
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [builderMode, setBuilderMode] = useState<'build' | 'remove' | 'edit'>('build')
+  const [selectedBox, setSelectedBox] = useState<ICartItem>();
+  const [selectedBoxItem, setSelectedBoxItem] = useState<IBoxItem>();
+
+  // const [boxSize, setBoxSize] = useState<number>();
+
+  const dispatch = useAppDispatch()
+  const cart = useAppSelector(state => state.cart.items)
+
+  const handleBoxSelected = (boxItem:IBoxItem) => {
+    console.log("selected boxItem: ", boxItem)
+    setBuilderMode("build")
+    setSelectedBox({ ...boxItem, quantity: 1, boxID: crypto.randomUUID() })
+    // setBoxSize(boxItem.size || 6)
+    setIsBuilderOpen(true)
+  }
+
+  const handleBoxRemoved = (boxItem: IBoxItem) => {
+    setBuilderMode("remove")
+    setSelectedBox({ ...boxItem, quantity: 1 })
+    // setBoxSize(boxItem.size || 6)
+    setIsBuilderOpen(true)
+  }
   
   const generateDonutList = () => {
     return (
-      <ul>
-        {donutList.map(donutItem => (
-          <li className="inline-block mr-2 transition-all duration-300" key={donutItem.id}>
-            <div className="flex flex-col hover:shadow-2xl xs:rounded-xl">
-              <Image src={donutItem.image} alt="chocolate" width={undefined} quality={100}
-                className="w-auto max-h-[200px] xs:max-h-[300px] object-contain" />
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8 "
+        style={{ gridTemplateRows:"repeat(4, minmax(0,250px)"}}
+      >
+        {donutList.map(donutItem => {
+          
 
-              <div className="flex justify-around">
-                <pre className="p-4 pt-0 text-left">{ donutItem.name }</pre>
-                <pre className="p-4 pt-0 text-right">{ donutItem.price }</pre>
-              </div>
-              
-            </div>
-          </li>
-        ))}
-      </ul>
+          return (
+            <MenuItem item={donutItem} >
+              <QuantitySelector item={donutItem} />
+            </MenuItem>
+        )})}
+      </div>
     )
   }
 
+  const generateDrinksList = () => {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8"
+        style={{ gridTemplateRows: "repeat(4, minmax(0,250px)" }}
+      >
+        {drinksList.map(drinkItem => (
+          <MenuItem item={drinkItem} >
+            <QuantitySelector item={drinkItem} />
+          </MenuItem>
+        ))}
+      </div>
+    )
+  }
+
+  const generateBoxList = () => {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8"
+        style={{ gridTemplateRows: "repeat(4, minmax(0,250px" }}
+      >
+        {boxList.map(boxItem => (
+          <MenuItem item={boxItem} >
+            <QuantitySelectorBox item={boxItem} handleBoxSelected={handleBoxSelected} handleBoxRemoved={handleBoxRemoved} />
+          </MenuItem>
+        ))}
+      </div>
+    )
+  }
+
+  useEffect(() => {
+    console.log("cart: ", builderMode)
+  }, [builderMode])
 
 
   return (
-    <main className="flex flex-col lg:mx-[8%] main-shadow bg-white">
+    <main className="flex flex-col pt-2 lg:px-5 gap-2 h-full w-full  bg-white">
+
+      {selectedBox &&
+        <BoxBuilder boxItem={selectedBox} isOpen={isBuilderOpen} onClose={() => {setIsBuilderOpen(false)}}
+          mode={builderMode} setBuilderMode={setBuilderMode} setSelectedBox={setSelectedBox}
+        />
+      }
       
+      <div className="flex h-full w-full">
+        <Tabs defaultValue="donuts" className="w-full h-full">
+          <TabsList className="w-full gap-5" style={{}}>
+            <TabsTrigger className="" value="donuts">Donuts</TabsTrigger>
+            <TabsTrigger value="boxes">Boxes</TabsTrigger>
+            <TabsTrigger value="drinks">Drinks</TabsTrigger>
+          </TabsList>
 
+          <TabsContent className="h-full items-center justify-center" value="donuts">
+            {generateDonutList()}
+          </TabsContent>
 
-      {/* donuts */}
-      <div className="flex flex-col my-5 xs:my-0">
-        <h1 className="mr-auto my-10 ml-16">DONUTS</h1>
-        <div className="xs:rounded-xl mx-5">
-          {generateDonutList()}
-        </div>
+          <TabsContent className="h-full items-center justify-center" value="boxes">
+            {generateBoxList()}
+          </TabsContent>
+
+          <TabsContent className="h-full items-center justify-center" value="drinks">
+            {generateDrinksList()}
+          </TabsContent>
+
+        </Tabs>
       </div>
+      
+      {/* <div className="flex border-zinc-300 border-[1px] h-full w-1/3 rounded-2xl max-h-screen">
+
+      </div> */}
 
 
-      {/* footer */}
-      <div className="flex xs:mt-20 mt-32 lg:min-h-[450px] footer-bg">
-
-        <div className="flex flex-col basis-1/2 xs:p-10">
-          <div className="flex flex-col">
-            <h2>Contact us</h2>
-            <ul className="mt-3 xs:ml-3">
-              <li className="flex items-center">
-                <Phone size={25} />
-                <p className="ml-2">101001011</p>
-              </li>
-              <li className="flex items-center">
-                <Email size={25} />
-                <p className="ml-2">hobba@hobba.hhh</p>
-              </li>
-              <li className="flex items-center">
-                <Location size={25} />
-                <p className="ml-2">the street beside the building</p>
-              </li>
-            </ul>
-          </div>
-          
-          <div className="flex flex-col mt-10">
-            <h2>Follow us</h2>
-            <ul>
-              <li>FB</li>
-              <li>X</li>
-              <li>linkedin</li>
-              <li>insta</li>
-            </ul>
-          </div>
-        </div>
-
-        <Image src={footer} alt="footerImg" width={undefined} quality={100} 
-          className="w-1/2 h-auto object-cover object-left" />
-
-      </div>
       
     </main>
   )
 }
+
+
+{/* donuts */ }
+{/* <div className="flex flex-col my-5 xs:my-0">
+        <h1 className="mr-auto my-10 ml-16">DONUTS</h1>
+        <div className="xs:rounded-xl mx-5">
+          {generateDonutList()}
+        </div>
+      </div> */}

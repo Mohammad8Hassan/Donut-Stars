@@ -7,6 +7,10 @@ const navItems = [
     name: "Donuts",
     url: "/buy"
   },
+  {
+    name: "Account",
+    url: "/account"     
+  }
 ]
   
 

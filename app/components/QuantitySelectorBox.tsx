@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { CircleMinus, CirclePlus } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addItem, setQuantity } from '../store/cartSlice'
-import { IBoxItem, ICartItem } from '@/types'
+import { IBoxItem } from '@/types'
 
 // type WithId = { id: string };
 
@@ -21,7 +21,9 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
 
   const [inCart, setInCart] = useState(cart.some(x => x.id == item.id));
 
+  // Update box quantity in cart (used by +/- from in-cart controls).
   const handleSet = (item: IBoxItem, quantity:number) => {
+    console.log("[QuantitySelectorBox] setQuantity click", { id: item.id, name: item.name, nextQuantity: quantity });
     dispatch(setQuantity({
       id: item.id, 
       quantity: quantity
@@ -38,10 +40,14 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
 
 
   useEffect(() => {
-    setInCart(cart.some(x => x.id == item.id))
+    const existsInCart = cart.some(x => x.id == item.id)
+    console.log("[QuantitySelectorBox] cart sync", { id: item.id, inCart: existsInCart, count });
+    setInCart(existsInCart)
   }, [cart])
 
+  // Add a box entry to cart (uses boxID for unique carton instance tracking).
   const handleSelect = (item: IBoxItem) => {
+    console.log("[QuantitySelectorBox] addItem click", item)
     dispatch(addItem({
       id: item.id,
       name: item.name,
@@ -95,3 +101,4 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
     </div>
   )
 }
+

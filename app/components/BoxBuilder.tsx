@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import donutList from "@/donut-list";
@@ -20,6 +20,7 @@ interface DonutBoxModalProps {
 }
 
 export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderMode, setSelectedBox }: DonutBoxModalProps) {
+  // Start with existing contents in edit mode, or empty slots matching box size.
   const [selected, setSelected] = useState<(IItem | null)[]>(() =>
     mode == "edit" && boxItem.contents && boxItem.contents.length > 0
       ? boxItem.contents
@@ -30,8 +31,8 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    console.log("changed: ", boxItem)
-    // reinitialize whenever boxItem changes
+    console.log("[BoxBuilder] boxItem changed:", boxItem)
+    // Reinitialize selected donut slots whenever user switches box item/mode.
     setSelected(
       mode == "edit" && boxItem.contents && boxItem.contents.length > 0
         ? boxItem.contents
@@ -39,25 +40,32 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
     );
   }, [boxItem]);
 
+  // Add a donut into the first available slot.
   const handleSelect = (donut: IItem) => {
     const firstEmptyIndex = selected.findIndex((s) => s === null);
     if (firstEmptyIndex !== -1) {
       const updated = [...selected];
       updated[firstEmptyIndex] = donut;
       setSelected(updated);
+      console.log("[BoxBuilder] selected donut for box", { boxId: boxItem.id, donutId: donut.id, slot: firstEmptyIndex })
     } else {
+      console.log("[BoxBuilder] box full, cannot add more donuts", { boxId: boxItem.id, size: boxItem.size });
       alert(`All ${boxItem.size} slots are full.`);
     }
   };
 
+  // Remove a donut from a slot.
   const handleRemove = (index: number) => {
     const updated = [...selected];
+    const removed = updated[index];
     updated[index] = null;
     setSelected(updated);
+    console.log("[BoxBuilder] removed donut slot", { boxId: boxItem.id, index, removedDonut: removed?.id })
   };
 
   const handleConfirm = () => {
     if(mode == "edit") {
+      console.log("[BoxBuilder] updating existing box contents", { boxID: boxItem.boxID, boxId: boxItem.id });
       dispatch(updateItemByBoxID({
         boxID: boxItem.boxID!,
         updated: {
@@ -65,7 +73,7 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
         }
       }))
     } else {
-      dispatch(addItem({
+      const payload = {
         id: boxItem.id,
         name: boxItem.name,
         discription: boxItem.discription,
@@ -74,24 +82,30 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
         quantity: 1,
         contents: selected as IItem[],
         boxID: boxItem.boxID
-      }))
+      };
+
+      console.log("[BoxBuilder] add box item to cart", payload)
+      dispatch(addItem(payload))
     }
   }
 
+  // Validate the selected donut count before committing add/update.
   const handleAddToCart = () => {
     if (selected.length === boxItem.size) {
       handleConfirm()
       onClose();
       setSelected([]);
+      console.log("[BoxBuilder] box confirmed and modal closed", { boxId: boxItem.id })
     } else {
+      console.log("[BoxBuilder] not enough donuts selected", { boxId: boxItem.id, selected: selected.length, required: boxItem.size })
       alert(`Please select ${boxItem.size} donuts.`);
     }
   };
 
   useEffect(() => {
-    console.log("cart: ", cart)
-    console.log("boxItem: ", boxItem)
-    console.log("selected: ", selected)
+    console.log("[BoxBuilder] cart: ", cart)
+    console.log("[BoxBuilder] boxItem: ", boxItem)
+    console.log("[BoxBuilder] selected: ", selected)
 
     // dispatch(removeStrays())
   }, [mode, boxItem])
@@ -100,6 +114,7 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
     if (e.target === e.currentTarget) onClose();
   };
 
+  // Open builder in edit mode with selected cart item data.
   const handleEdit = (item: ICartItem) => {
     setSelectedBox({...item, discription:"menuItem", image:item.image, size:boxItem.size || 3})
     setBuilderMode('edit')
@@ -107,6 +122,7 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
 
   const handleDelete = (item: ICartItem) => {
     if (!item.boxID) return;
+    console.log("[BoxBuilder] remove box from cart", { boxId: item.id, boxID: item.boxID })
     dispatch(removeBoxItem({boxID:item.boxID}))
   }
 
@@ -230,7 +246,6 @@ export default function BoxBuilder({ isOpen, onClose, boxItem, mode, setBuilderM
                         
                       </div>
                     </div>
-
                   </div>
                 )
               }

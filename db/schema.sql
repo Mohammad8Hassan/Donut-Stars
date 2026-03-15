@@ -1,225 +1,344 @@
--- MySQL dump 10.13  Distrib 8.0.40, for Win64 (x86_64)
+-- =========================================================
+-- DONUT SHOP DATABASE SCHEMA
+-- =========================================================
+-- Important design rules for agents:
 --
--- Host: localhost    Database: donuts
--- ------------------------------------------------------
--- Server version	8.4.3
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
+-- 1) All menu items (donuts, drinks, boxes) are stored in `products`.
+-- 2) Boxes are identified by products.capacity != NULL.
+-- 3) Donuts and drinks have capacity = NULL.
+-- 4) order_items always reference products.id.
+-- 5) If the ordered product is a box, its selected donuts are stored
+--    in order_item_box_contents.
 --
--- Table structure for table `addresses`
+-- Example:
+-- products
+-- id | name           | capacity
+-- 1  | Chocolate Donut| NULL
+-- 2  | Regular Coffee | NULL
+-- 3  | 6-Donut Box    | 6
 --
-
-DROP TABLE IF EXISTS `addresses`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `addresses` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint unsigned NOT NULL,
-  `label` varchar(50) DEFAULT NULL,
-  `full_name` varchar(100) NOT NULL,
-  `phone` varchar(30) NOT NULL,
-  `line1` varchar(255) NOT NULL,
-  `city` varchar(100) NOT NULL,
-  `postal_code` varchar(20) DEFAULT NULL,
-  `country` varchar(100) NOT NULL,
-  `is_default` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_addresses_user` (`user_id`),
-  CONSTRAINT `fk_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- order_items
+-- id | order_id | product_id
+-- 5  | 10       | 3   <-- 6-donut box
 --
--- Table structure for table `box_contents`
+-- order_item_box_contents
+-- order_item_id | donut_product_id | quantity
+-- 5             | 1                | 2
+-- 5             | 4                | 4
 --
+-- This means the customer selected 6 donuts inside that box.
+-- =========================================================
 
-DROP TABLE IF EXISTS `box_contents`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `box_contents` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `box_product_id` int unsigned NOT NULL,
-  `donut_product_id` bigint unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_box` (`box_product_id`),
-  KEY `fk_box_contents_donut` (`donut_product_id`),
-  CONSTRAINT `fk_box_contents_box` FOREIGN KEY (`box_product_id`) REFERENCES `box_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_box_contents_donut` FOREIGN KEY (`donut_product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+
+DROP TABLE IF EXISTS users;
+
+
+-- =========================================================
+-- ROLES
+-- =========================================================
+-- User roles such as: admin, customer
+-- Referenced by users.role_id
+CREATE TABLE roles (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+
+
+-- =========================================================
+-- USERS
+-- =========================================================
+-- Registered accounts.
+-- role_id determines permissions.
+CREATE TABLE users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  role_id INT UNSIGNED NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+
+  phone VARCHAR(30),
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  -- Soft delete timestamp. If not NULL the user is considered deleted.
+  deleted_at TIMESTAMP NULL,
+
+  CONSTRAINT fk_users_role
+    FOREIGN KEY (role_id)
+    REFERENCES roles(id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+
+
+-- =========================================================
+-- ADDRESSES
+-- =========================================================
+-- Users may store multiple delivery addresses.
+CREATE TABLE addresses (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  user_id BIGINT UNSIGNED NOT NULL,
+
+  label VARCHAR(50),
+  line1 VARCHAR(255) NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  postal_code VARCHAR(20),
+  country VARCHAR(100) NOT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_addresses_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
+
+-- =========================================================
+-- PRODUCT CATEGORIES
+-- =========================================================
+-- Typical rows:
+-- 1 = Donuts
+-- 2 = Drinks
+-- 3 = Boxes
+CREATE TABLE categories (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+
+
+-- =========================================================
+-- PRODUCTS
+-- =========================================================
+-- Central catalog table.
+-- Stores ALL menu items:
+--   donuts
+--   drinks
+--   boxes
+--
+-- How to detect product type:
+--
+-- Donut:
+--   category = Donuts
+--   capacity = NULL
+--
+-- Drink:
+--   category = Drinks
+--   capacity = NULL
+--
+-- Box product:
+--   category = Boxes
+--   capacity = 3 / 6 / 12
+--
+-- Boxes themselves contain no predefined donuts.
+-- Their chosen donuts are stored per order in order_item_box_contents.
+CREATE TABLE products (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+  category_id INT UNSIGNED NOT NULL,
+
+  name VARCHAR(150) NOT NULL,
+  description TEXT NOT NULL,
+
+  price DECIMAL(10,2) NOT NULL,
+
+  image VARCHAR(255),
+
+  -- If FALSE the product is hidden from the menu but
+  -- still exists for historical order records.
+  is_active BOOLEAN DEFAULT TRUE,
+
+  -- Optional UI color used by the frontend.
+  tint VARCHAR(20) DEFAULT NULL,
+
+  -- NULL = normal product
+  -- 3 / 6 / 12 = donut box capacity
+  capacity INT DEFAULT NULL,
+
+  KEY idx_products_category (category_id),
+
+  CONSTRAINT fk_products_category
+    FOREIGN KEY (category_id)
+    REFERENCES categories(id)
+    ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `box_types`
---
 
-DROP TABLE IF EXISTS `box_types`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `box_types` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  `capacity` int NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `categories`
---
+-- =========================================================
+-- ORDERS
+-- =========================================================
+-- Represents a purchase.
+-- user_id may be NULL for guest checkout.
+CREATE TABLE orders (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-DROP TABLE IF EXISTS `categories`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `categories` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  user_id BIGINT UNSIGNED NULL,
 
---
--- Table structure for table `order_items`
---
+  status ENUM('pending','paid','shipped','completed','cancelled')
+    DEFAULT 'pending',
 
-DROP TABLE IF EXISTS `order_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `order_items` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `order_id` bigint unsigned NOT NULL,
-  `product_id` bigint unsigned DEFAULT NULL,
-  `box_type_id` int unsigned DEFAULT NULL,
-  `quantity` int NOT NULL DEFAULT '1',
-  `unit_price` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_items_order` (`order_id`),
-  KEY `fk_items_product` (`product_id`),
-  KEY `fk_items_box` (`box_type_id`),
-  CONSTRAINT `fk_items_box` FOREIGN KEY (`box_type_id`) REFERENCES `box_types` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_items_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  subtotal DECIMAL(10,2) NOT NULL,
+  shipping DECIMAL(10,2) NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
 
---
--- Table structure for table `orders`
---
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-DROP TABLE IF EXISTS `orders`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `orders` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint unsigned DEFAULT NULL,
-  `status` enum('pending','paid','shipped','completed','cancelled') DEFAULT 'pending',
-  `subtotal` decimal(10,2) NOT NULL,
-  `shipping` decimal(10,2) NOT NULL,
-  `total` decimal(10,2) NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_orders_user` (`user_id`),
-  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  CONSTRAINT fk_orders_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE SET NULL
+) ENGINE=InnoDB;
 
---
--- Table structure for table `products`
---
 
-DROP TABLE IF EXISTS `products`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `products` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `category_id` int unsigned NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `price` decimal(10,2) NOT NULL,
-  `image` varchar(255) DEFAULT NULL,
-  `is_active` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`),
-  KEY `fk_products_category` (`category_id`),
-  CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
+-- =========================================================
+-- ORDER ITEMS
+-- =========================================================
+-- One row per product purchased.
 --
--- Table structure for table `roles`
+-- product_id ALWAYS references products.id.
 --
+-- If the product is a donut or drink:
+--   nothing special is needed.
+--
+-- If the product is a box (capacity != NULL):
+--   its selected donuts will appear in
+--   order_item_box_contents.
+CREATE TABLE order_items (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
-DROP TABLE IF EXISTS `roles`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `roles` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  order_id BIGINT UNSIGNED NOT NULL,
 
---
--- Table structure for table `sessions`
---
+  product_id BIGINT UNSIGNED NOT NULL,
 
-DROP TABLE IF EXISTS `sessions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sessions` (
-  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` bigint unsigned NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `data` json DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_sessions_user` (`user_id`),
-  CONSTRAINT `fk_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  quantity INT NOT NULL DEFAULT 1,
+
+  -- Price snapshot at time of purchase
+  unit_price DECIMAL(10,2) NOT NULL,
+
+  PRIMARY KEY (id),
+
+  KEY idx_items_order (order_id),
+  KEY idx_items_product (product_id),
+
+  CONSTRAINT fk_items_order
+    FOREIGN KEY (order_id)
+    REFERENCES orders(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_items_product
+    FOREIGN KEY (product_id)
+    REFERENCES products(id)
+    ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
+
+
+-- =========================================================
+-- ORDER ITEM BOX CONTENTS
+-- =========================================================
+-- Stores which donuts were selected inside a purchased box.
 --
--- Table structure for table `users`
+-- Each row belongs to ONE order item.
+-- order_item_id must reference a box product.
 --
+-- donut_product_id must reference a donut product.
+--
+-- Example:
+--
+-- order_items
+-- id | product_id
+-- 7  | (6-donut box)
+--
+-- order_item_box_contents
+-- order_item_id | donut_product_id | quantity
+-- 7             | chocolate donut  | 2
+-- 7             | strawberry donut | 4
+CREATE TABLE order_item_box_contents (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 
-DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `role_id` int unsigned NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `phone` varchar(30) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  `refresh_token_hash` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
-  KEY `fk_users_role` (`role_id`),
-  CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+  order_item_id BIGINT UNSIGNED NOT NULL,
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+  donut_product_id BIGINT UNSIGNED NOT NULL,
 
--- Dump completed on 2026-02-18 10:56:57
+  quantity INT NOT NULL DEFAULT 1,
+
+  PRIMARY KEY (id),
+
+  KEY idx_oibc_item (order_item_id),
+  KEY idx_oibc_donut (donut_product_id),
+
+  CONSTRAINT fk_oibc_item
+    FOREIGN KEY (order_item_id)
+    REFERENCES order_items(id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_oibc_donut
+    FOREIGN KEY (donut_product_id)
+    REFERENCES products(id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- =========================================================
+-- SESSIONS
+-- =========================================================
+-- Optional server-side session store.
+CREATE TABLE sessions (
+  id VARCHAR(255) NOT NULL,
+
+  user_id BIGINT UNSIGNED NOT NULL,
+
+  expires_at DATETIME NOT NULL,
+
+  data JSON DEFAULT NULL,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+
+  KEY idx_sessions_user (user_id),
+
+  CONSTRAINT fk_sessions_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- =========================================================
+-- PASSWORD RESETS
+-- =========================================================
+-- Password recovery tokens.
+CREATE TABLE password_resets (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+  user_id BIGINT UNSIGNED NOT NULL,
+
+  token VARCHAR(255) NOT NULL,
+
+  expires_at DATETIME NOT NULL,
+
+  used TINYINT(1) NOT NULL DEFAULT 0,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+
+  KEY idx_pr_user (user_id),
+
+  CONSTRAINT fk_pr_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

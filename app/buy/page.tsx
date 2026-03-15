@@ -1,71 +1,73 @@
-'use client'
+﻿'use client'
 
-import Image from "next/image";
-import donutList from "@/donut-list";
-import boxList from "@/box-list";
-import drinksList from "@/drinks-list";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addItem, setQuantity } from "../store/cartSlice";
-import { CircleMinus, CirclePlus, Trash2 } from "lucide-react";
-import QuantitySelector from "../components/QuantitySelector";
-import BoxBuilder from "../components/BoxBuilder";
 import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BoxBuilder from "../components/BoxBuilder";
 import MenuItem from "../components/MenuItem";
+import QuantitySelector from "../components/QuantitySelector";
 import QuantitySelectorBox from "../components/QuantitySelectorBox";
-import { IBoxItem, ICartItem } from "@/types";
+import { IBoxItem, ICartItem, IItem } from "@/types";
+
+type MenuResponse = {
+  donuts: IItem[];
+  drinks: IItem[];
+  boxes: IBoxItem[];
+};
 
 export default function Buy() {
+  // Holds live menu data coming from `/api/menu`.
+  const [menu, setMenu] = useState<MenuResponse>({
+    donuts: [],
+    drinks: [],
+    boxes: [],
+  });
 
+  // Basic loading/error state for API fetch.
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Box builder modal state.
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [builderMode, setBuilderMode] = useState<'build' | 'remove' | 'edit'>('build')
   const [selectedBox, setSelectedBox] = useState<ICartItem>();
-  const [selectedBoxItem, setSelectedBoxItem] = useState<IBoxItem>();
-
-  // const [boxSize, setBoxSize] = useState<number>();
-
-  const dispatch = useAppDispatch()
-  const cart = useAppSelector(state => state.cart.items)
 
   const handleBoxSelected = (boxItem:IBoxItem) => {
-    console.log("selected boxItem: ", boxItem)
+    console.log("[Buy] open builder in build mode", boxItem)
     setBuilderMode("build")
     setSelectedBox({ ...boxItem, quantity: 1, boxID: crypto.randomUUID() })
-    // setBoxSize(boxItem.size || 6)
     setIsBuilderOpen(true)
   }
 
   const handleBoxRemoved = (boxItem: IBoxItem) => {
+    console.log("[Buy] open builder in remove mode", boxItem)
     setBuilderMode("remove")
     setSelectedBox({ ...boxItem, quantity: 1 })
-    // setBoxSize(boxItem.size || 6)
     setIsBuilderOpen(true)
   }
-  
+
+  // Donuts section renderer from DB-backed menu state.
   const generateDonutList = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8 "
         style={{ gridTemplateRows:"repeat(4, minmax(0,250px)"}}
       >
-        {donutList.map(donutItem => {
-          
-
-          return (
-            <MenuItem item={donutItem} >
-              <QuantitySelector item={donutItem} />
-            </MenuItem>
-        )})}
+        {menu.donuts.map(donutItem => (
+          <MenuItem key={donutItem.id} item={donutItem}>
+            <QuantitySelector item={donutItem} />
+          </MenuItem>
+        ))}
       </div>
     )
   }
 
+  // Drinks section renderer from DB-backed menu state.
   const generateDrinksList = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8"
-        style={{ gridTemplateRows: "repeat(4, minmax(0,250px)" }}
+        style={{ gridTemplateRows: "repeat(4, minmax(0,250px" }}
       >
-        {drinksList.map(drinkItem => (
-          <MenuItem item={drinkItem} >
+        {menu.drinks.map(drinkItem => (
+          <MenuItem key={drinkItem.id} item={drinkItem} >
             <QuantitySelector item={drinkItem} />
           </MenuItem>
         ))}
@@ -73,13 +75,14 @@ export default function Buy() {
     )
   }
 
+  // Boxes section renderer from DB-backed menu state.
   const generateBoxList = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8"
         style={{ gridTemplateRows: "repeat(4, minmax(0,250px" }}
       >
-        {boxList.map(boxItem => (
-          <MenuItem item={boxItem} >
+        {menu.boxes.map(boxItem => (
+          <MenuItem key={boxItem.id} item={boxItem} >
             <QuantitySelectorBox item={boxItem} handleBoxSelected={handleBoxSelected} handleBoxRemoved={handleBoxRemoved} />
           </MenuItem>
         ))}
@@ -87,9 +90,67 @@ export default function Buy() {
     )
   }
 
+  // Keep a quick trace when builder mode changes.
   useEffect(() => {
-    console.log("cart: ", builderMode)
+    console.log("[Buy] builderMode ->", builderMode)
   }, [builderMode])
+
+  // Fetch menu from the API instead of local list files.
+  useEffect(() => {
+    let isActive = true;
+
+    const loadMenu = async () => {
+      try {
+        setIsLoading(true)
+        console.log("[Buy] Fetching menu from /api/menu...");
+
+        const response = await fetch('/api/menu');
+
+        console.log("[Buy] /api/menu response status:", response.status);
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`Menu request failed with status ${response.status}: ${errorBody}`);
+        }
+
+        const payload = await response.json() as MenuResponse;
+
+        console.log("[Buy] Menu payload received:", {
+          donuts: payload.donuts.length,
+          drinks: payload.drinks.length,
+          boxes: payload.boxes.length,
+        });
+        console.log("[Buy] Menu sample", {
+          firstDonut: payload.donuts[0],
+          firstDrink: payload.drinks[0],
+          firstBox: payload.boxes[0],
+        });
+
+        if (isActive) {
+          setMenu(payload)
+          setError(null)
+        }
+      } catch (error: any) {
+        const message = error?.message || "Failed to load menu";
+        console.error("[Buy] loadMenu error:", message);
+
+        if (isActive) {
+          setError(message)
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false)
+          console.log("[Buy] menu fetch completed");
+        }
+      }
+    }
+
+    loadMenu()
+
+    return () => {
+      isActive = false
+    }
+  }, [])
 
 
   return (
@@ -100,45 +161,36 @@ export default function Buy() {
           mode={builderMode} setBuilderMode={setBuilderMode} setSelectedBox={setSelectedBox}
         />
       }
-      
+
       <div className="flex h-full w-full">
-        <Tabs defaultValue="donuts" className="w-full h-full">
-          <TabsList className="w-full gap-5" style={{}}>
-            <TabsTrigger className="" value="donuts">Donuts</TabsTrigger>
-            <TabsTrigger value="boxes">Boxes</TabsTrigger>
-            <TabsTrigger value="drinks">Drinks</TabsTrigger>
-          </TabsList>
+        {isLoading ? (
+          <p>Loading menu...</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : (
+          <Tabs defaultValue="donuts" className="w-full h-full">
+            <TabsList className="w-full gap-5" style={{}}>
+              <TabsTrigger className="" value="donuts">Donuts</TabsTrigger>
+              <TabsTrigger value="boxes">Boxes</TabsTrigger>
+              <TabsTrigger value="drinks">Drinks</TabsTrigger>
+            </TabsList>
 
-          <TabsContent className="h-full items-center justify-center" value="donuts">
-            {generateDonutList()}
-          </TabsContent>
+            <TabsContent className="h-full items-center justify-center" value="donuts">
+              {generateDonutList()}
+            </TabsContent>
 
-          <TabsContent className="h-full items-center justify-center" value="boxes">
-            {generateBoxList()}
-          </TabsContent>
+            <TabsContent className="h-full items-center justify-center" value="boxes">
+              {generateBoxList()}
+            </TabsContent>
 
-          <TabsContent className="h-full items-center justify-center" value="drinks">
-            {generateDrinksList()}
-          </TabsContent>
+            <TabsContent className="h-full items-center justify-center" value="drinks">
+              {generateDrinksList()}
+            </TabsContent>
 
-        </Tabs>
+          </Tabs>
+        )}
       </div>
-      
-      {/* <div className="flex border-zinc-300 border-[1px] h-full w-1/3 rounded-2xl max-h-screen">
 
-      </div> */}
-
-
-      
     </main>
   )
 }
-
-
-{/* donuts */ }
-{/* <div className="flex flex-col my-5 xs:my-0">
-        <h1 className="mr-auto my-10 ml-16">DONUTS</h1>
-        <div className="xs:rounded-xl mx-5">
-          {generateDonutList()}
-        </div>
-      </div> */}

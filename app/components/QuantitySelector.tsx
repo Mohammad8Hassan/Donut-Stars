@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { CircleMinus, CirclePlus } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { IItem } from '@/donut-list'
+import { IItem } from '@/types'
 import { addItem, setQuantity } from '../store/cartSlice'
 
 // type WithId = { id: string };
@@ -19,7 +19,9 @@ export default function QuantitySelector({item} : QuantitySelectorType) {
 
   const [inCart, setInCart] = useState(cart.some(x => x.id == item.id));
 
+  // update quantity in cart (used by +/- buttons)
   const handleSet = (item: IItem, quantity:number) => {
+    console.log("[QuantitySelector] setQuantity click", { id: item.id, name: item.name, nextQuantity: quantity })
     dispatch(setQuantity({
       id: item.id, 
       quantity: quantity
@@ -36,13 +38,18 @@ export default function QuantitySelector({item} : QuantitySelectorType) {
 
 
   useEffect(() => {
-    setInCart(cart.some(x => x.id == item.id))
+    const existsInCart = cart.some(x => x.id == item.id)
+    console.log("[QuantitySelector] cart sync", { id: item.id, inCart: existsInCart, quantity: count });
+    setInCart(existsInCart)
   }, [cart])
 
+  // Add a new cart item when not already present.
   const handleSelect = (item: IItem) => {
+    console.log("[QuantitySelector] addItem click", item)
     dispatch(addItem({
       id: item.id,
       name: item.name,
+      discription:item.discription,
       price: item.price,
       image: item.image,
       quantity: 1

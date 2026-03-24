@@ -1,4 +1,4 @@
-﻿// /store/cartSlice.ts
+// /store/cartSlice.ts
 import { ICartItem } from '@/types'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
@@ -23,12 +23,14 @@ const cartSlice = createSlice({
       const item = action.payload
       console.log("[cartSlice.addItem] payload", item)
 
+      // Existing behavior (single-row by id) stays only for non-box menu items.
+      // For boxes we always keep each instance separate so users can add duplicates
+      // with different composition and control each row via edit/remove.
       const idx = state.items.findIndex(
         i => i.id === item.id
       )
 
-      // Keep same behavior for non-box items: merge quantities by same id.
-      if (idx >= 0 && !item.id.includes("b")) {
+      if (idx >= 0 && !item.boxID) {
         state.items[idx].quantity += item.quantity
         console.log("[cartSlice.addItem] merged quantity", {
           id: item.id,
@@ -64,6 +66,7 @@ const cartSlice = createSlice({
     },
     removeBoxItem(state, action: PayloadAction<{ boxID: string }>) {
       console.log("[cartSlice.removeBoxItem] payload", action.payload)
+      // Remove only the exact box instance, not every box of same size.
       state.items = state.items.filter(
         i => !(i.boxID === action.payload.boxID)
       )
@@ -75,12 +78,15 @@ const cartSlice = createSlice({
       )
       console.log("[cartSlice.removeStrays] cart cleaned:", state.items)
     },
-    setQuantity(state, action: PayloadAction<{ id: string; quantity: number; options?: Record<string, string> }>) {
-      const { id, quantity, } = action.payload
+    setQuantity(state, action: PayloadAction<{ id: string; quantity: number; boxID?: string; options?: Record<string, string> }>) {
+      const { id, quantity, boxID } = action.payload
       console.log("[cartSlice.setQuantity] payload", action.payload)
-      const idx = state.items.findIndex(
-        i => i.id === id
-      )
+
+      // For normal items, target by id. For boxes, target by unique boxID.
+      const idx = typeof boxID === 'string'
+        ? state.items.findIndex(i => i.boxID === boxID)
+        : state.items.findIndex(i => i.id === id)
+
       if (idx >= 0) {
         if (quantity <= 0) {
           console.log("[cartSlice.setQuantity] removing because quantity <= 0", { id })
@@ -114,4 +120,3 @@ export const selectCartTotal = (state: { cart: CartState }) =>
   state.cart.items.reduce((s, i) => s + i.quantity * i.price, 0)
 
 export default cartSlice.reducer
-

@@ -24,6 +24,7 @@ type PaymentState = {
   cardNumber: string;
   expiry: string;
   cvc: string;
+  paymentMethod: string;
 };
 
 export default function PaymentPage(): JSX.Element {
@@ -39,6 +40,7 @@ export default function PaymentPage(): JSX.Element {
     cardNumber: "",
     expiry: "",
     cvc: "",
+    paymentMethod: "demo-card",
   });
 
   // Address state loaded from the same /api/addresses source used in account page.
@@ -137,6 +139,8 @@ export default function PaymentPage(): JSX.Element {
     setProcessing(true);
 
     try {
+      const cardNumber = form.cardNumber.replace(/\s+/g, "");
+
       // Place order using selected saved address + cart items.
       const res = await authFetch("/api/orders", {
         method: "POST",
@@ -144,6 +148,15 @@ export default function PaymentPage(): JSX.Element {
         body: JSON.stringify({
           addressId: selectedAddressId,
           items: cartItems,
+          payment: {
+            method: form.paymentMethod,
+            provider: "demo",
+            last4: cardNumber.slice(-4),
+            reference: `demo_${crypto.randomUUID()}`,
+            metadata: {
+              expiry: form.expiry,
+            },
+          },
         }),
       });
 
@@ -281,6 +294,18 @@ export default function PaymentPage(): JSX.Element {
                   placeholder="123"
                 />
                 {fieldErrors.cvc && <p className="text-red-500 text-sm mt-1">{fieldErrors.cvc}</p>}
+              </label>
+
+              <label className="block flex-1 mb-4">
+                <span className="block text-sm mb-1">Payment Method</span>
+                <select
+                  value={form.paymentMethod}
+                  onChange={(e) => update("paymentMethod", e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 border-gray-300"
+                >
+                  <option value="demo-card">Demo Card</option>
+                  <option value="cash-on-delivery">Cash on Delivery</option>
+                </select>
               </label>
             </div>
 

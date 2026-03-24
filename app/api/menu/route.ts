@@ -27,11 +27,28 @@ export async function GET() {
         p.image,
         p.tint,
         p.capacity,
+        COALESCE(
+          GROUP_CONCAT(DISTINCT LOWER(TRIM(t.name)) ORDER BY t.name SEPARATOR ','),
+          ''
+        ) AS tag_names,
         LOWER(TRIM(c.name)) AS category_name
       FROM products p
       INNER JOIN categories c
         ON c.id = p.category_id
+      LEFT JOIN product_tags pt
+        ON pt.product_id = p.id
+      LEFT JOIN tags t
+        ON t.id = pt.tag_id
       WHERE p.is_active = TRUE
+      GROUP BY
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.image,
+        p.tint,
+        p.capacity,
+        c.name
       ORDER BY c.name ASC, p.name ASC
       `
     );
@@ -48,6 +65,10 @@ export async function GET() {
       const category = String(row.category_name || "").toLowerCase();
       const price = Number(row.price);
       const image = row.image ? String(row.image) : "";
+      const tags = String(row.tag_names || "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
 
       const baseItem: IItem = {
         id: String(row.id),
@@ -56,10 +77,11 @@ export async function GET() {
         price,
         discription: String(row.description || ""),
         tint: row.tint ? String(row.tint) : undefined,
+        tags,
       };
 
       console.log(
-        `[GET /api/menu] Row -> id:${baseItem.id}, name:${baseItem.name}, category:${category}, capacity:${row.capacity}, price:${baseItem.price}`
+        `[GET /api/menu] Row -> id:${baseItem.id}, name:${baseItem.name}, category:${category}, capacity:${row.capacity}, price:${baseItem.price}, tags:${tags.join("|") || "none"}`
       );
 
       if (category === "boxes" && isBoxCapacity(Number(row.capacity))) {

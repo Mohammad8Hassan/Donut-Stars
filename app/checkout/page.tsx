@@ -1,22 +1,35 @@
 "use client"
 
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { clearCart, removeItem, setQuantity, selectCartItems, selectCartTotal } from "../store/cartSlice";
+import { clearCart, removeItem, removeBoxItem, setQuantity, selectCartItems, selectCartTotal } from "../store/cartSlice";
 import Image from "next/image"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import Link from "next/link";
+import { ICartItem } from "@/types";
 
 export default function CheckoutPage() {
   const dispatch = useAppDispatch()
   const cartItems = useAppSelector(selectCartItems)
   const total = useAppSelector(selectCartTotal)
 
-  const handleRemove = (id: string) => {
-    dispatch(removeItem({ id }))
+  // Boxes are deleted by their unique boxID; normal items use id.
+  const handleRemove = (item: ICartItem) => {
+    if (item.boxID) {
+      dispatch(removeBoxItem({ boxID: item.boxID }))
+      return
+    }
+
+    dispatch(removeItem({ id: item.id }))
   }
 
-  const handleQuantityChange = (id: string, quantity: number) => {
-    dispatch(setQuantity({ id, quantity }))
+  // Boxes update quantity by unique boxID so one row does not alter another instance.
+  const handleQuantityChange = (item: ICartItem, quantity: number) => {
+    if (item.boxID) {
+      dispatch(setQuantity({ id: item.id, boxID: item.boxID, quantity }))
+      return
+    }
+
+    dispatch(setQuantity({ id: item.id, quantity }))
   }
 
   const handleClearCart = () => {
@@ -28,7 +41,7 @@ export default function CheckoutPage() {
   if (cartItems.length === 0)
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center gap-4">
-        <h2 className="text-2xl font-semibold">Your cart is empty 🛒</h2>
+        <h2 className="text-2xl font-semibold">Your cart is empty ??</h2>
         <p className="text-gray-500">Add some donuts and come back here to checkout!</p>
       </div>
     )
@@ -99,14 +112,15 @@ export default function CheckoutPage() {
             {/* Quantity controls */}
             <div className="flex items-center gap-3 mt-4 md:mt-0">
               <button
-                onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
-                className="p-2 rounded-md border hover:bg-gray-100"
+                onClick={() => handleQuantityChange(item, Math.max(1, item.quantity - 1))}
+                className={`p-2 rounded-md border hover:bg-gray-100 ${item.quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={item.quantity <= 1}
               >
                 <Minus size={16} />
               </button>
               <span className="text-lg w-8 text-center">{item.quantity}</span>
               <button
-                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                onClick={() => handleQuantityChange(item, item.quantity + 1)}
                 className="p-2 rounded-md border hover:bg-gray-100"
               >
                 <Plus size={16} />
@@ -117,7 +131,7 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               <span className="font-medium text-lg">${(item.price * item.quantity).toFixed(2)}</span>
               <button
-                onClick={() => handleRemove(item.id)}
+                onClick={() => handleRemove(item)}
                 className="p-2 rounded-md border text-red-500 hover:bg-red-50"
               >
                 <Trash2 size={18} />

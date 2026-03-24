@@ -1,9 +1,8 @@
-﻿'use client'
+'use client'
 
 import { CircleMinus, CirclePlus } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { addItem, setQuantity } from '../store/cartSlice'
+import { useAppSelector } from '../store/hooks'
 import { IBoxItem } from '@/types'
 
 // type WithId = { id: string };
@@ -16,59 +15,49 @@ type QuantitySelectorType = {
 
 export default function QuantitySelectorBox({ item, handleBoxSelected, handleBoxRemoved } : QuantitySelectorType) {
 
-  const dispatch = useAppDispatch()
   const cart = useAppSelector(state => state.cart.items)
 
+  // Keep the control in "in cart" mode if any box with this menu id exists.
   const [inCart, setInCart] = useState(cart.some(x => x.id == item.id));
 
-  // Update box quantity in cart (used by +/- from in-cart controls).
-  const handleSet = (item: IBoxItem, quantity:number) => {
-    console.log("[QuantitySelectorBox] setQuantity click", { id: item.id, name: item.name, nextQuantity: quantity });
-    dispatch(setQuantity({
-      id: item.id, 
-      quantity: quantity
-    }))
-  }
-
+  // Show total quantity across all box instances of this same menu item id.
   const getQuantity = (id: string) => {
-    const item = cart.filter(item => item.id == id)
-
-    return item?.length || 0
+    return cart.reduce((sum, cartItem) => {
+      return cartItem.id == id ? sum + cartItem.quantity : sum
+    }, 0)
   }
 
   let count = getQuantity(item.id)
 
 
   useEffect(() => {
+    // Re-sync button state when the cart changes.
     const existsInCart = cart.some(x => x.id == item.id)
     console.log("[QuantitySelectorBox] cart sync", { id: item.id, inCart: existsInCart, count });
     setInCart(existsInCart)
   }, [cart])
 
-  // Add a box entry to cart (uses boxID for unique carton instance tracking).
+  // Route both Add and + to the shared box modal flow handled in buy.tsx.
   const handleSelect = (item: IBoxItem) => {
-    console.log("[QuantitySelectorBox] addItem click", item)
-    dispatch(addItem({
-      id: item.id,
-      name: item.name,
-      discription:item.discription,
-      price: item.price,
-      image: item.image,
-      quantity: 1,
-      boxID: crypto.randomUUID()
-    }))
+    console.log("[QuantitySelectorBox] add flow", item)
+    handleBoxSelected(item)
   }
   
+  const isDecrementDisabled = count <= 1
+
   return (
     <div className="flex rounded-md transition-all duration-500 ease-out" style={{width: inCart ? "50%" : "100%"}}>
       {inCart ? (
         <>
-          <button className="flex items-center justify-center rounded-tl-xl rounded-bl-xl"
+          <button className={`flex items-center justify-center rounded-tl-xl rounded-bl-xl`
+            + (isDecrementDisabled ? " opacity-50 cursor-not-allowed" : "")
+            }
             style={{
               border: "1px solid black",
               flex: 1
             }}
             onClick={() => handleBoxRemoved(item)}
+            disabled={isDecrementDisabled}
           >
             <CircleMinus strokeWidth={1} />
           </button>
@@ -83,7 +72,7 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
             border: "1px solid black",
             flex: 1
           }}
-            onClick={() => handleBoxSelected(item)}
+            onClick={() => handleSelect(item)}
           >
             <CirclePlus strokeWidth={1} />
           </button>
@@ -93,7 +82,7 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
           border: "1px solid black",
           flex: 1
         }}
-          onClick={() => handleBoxSelected(item)}
+          onClick={() => handleSelect(item)}
         >
           <text >Add to cart</text>
         </button >
@@ -101,4 +90,3 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
     </div>
   )
 }
-

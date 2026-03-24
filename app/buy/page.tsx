@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,13 +31,15 @@ export default function Buy() {
   const [builderMode, setBuilderMode] = useState<'build' | 'remove' | 'edit'>('build')
   const [selectedBox, setSelectedBox] = useState<ICartItem>();
 
+  // Clicking card plus now opens the same remove/manage modal.
   const handleBoxSelected = (boxItem:IBoxItem) => {
-    console.log("[Buy] open builder in build mode", boxItem)
-    setBuilderMode("build")
-    setSelectedBox({ ...boxItem, quantity: 1, boxID: crypto.randomUUID() })
+    console.log("[Buy] open builder in remove mode", boxItem)
+    setBuilderMode("remove")
+    setSelectedBox({ ...boxItem, quantity: 1 })
     setIsBuilderOpen(true)
   }
 
+  // Existing row minus/edit operations also reuse the same modal instance.
   const handleBoxRemoved = (boxItem: IBoxItem) => {
     console.log("[Buy] open builder in remove mode", boxItem)
     setBuilderMode("remove")
@@ -75,7 +77,7 @@ export default function Buy() {
     )
   }
 
-  // Boxes section renderer from DB-backed menu state.
+  // Boxes now open BoxBuilder in remove-mode first for add/edit/decrease/increase workflow.
   const generateBoxList = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2 h-full w-full pb-8"

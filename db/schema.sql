@@ -175,6 +175,14 @@ CREATE TABLE products (
 -- =========================================================
 -- Represents a purchase.
 -- user_id may be NULL for guest checkout.
+--
+-- Address fields are stored as a snapshot on the order itself,
+-- so old orders remain accurate even if the user later edits or
+-- deletes saved addresses.
+--
+-- Payment fields store safe operational details only.
+-- Do NOT store full card number, expiry, or CVV.
+-- payment_meta may store gateway/provider-specific extra data.
 CREATE TABLE orders (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
@@ -183,17 +191,38 @@ CREATE TABLE orders (
   status ENUM('pending','paid','shipped','completed','cancelled')
     DEFAULT 'pending',
 
+  payment_status ENUM('pending','paid','failed','refunded')
+    DEFAULT 'pending',
+  payment_method VARCHAR(50) NULL,
+  payment_provider VARCHAR(50) NULL,
+  payment_reference VARCHAR(255) NULL,
+  payment_last4 VARCHAR(4) NULL,
+  payment_meta JSON NULL,
+
+  shipping_name VARCHAR(100) NOT NULL,
+  shipping_phone VARCHAR(30) NULL,
+  shipping_line1 VARCHAR(255) NOT NULL,
+  shipping_city VARCHAR(100) NOT NULL,
+  shipping_postal_code VARCHAR(20) NULL,
+  shipping_country VARCHAR(100) NOT NULL,
+
+  customer_note TEXT NULL,
+
   subtotal DECIMAL(10,2) NOT NULL,
   shipping DECIMAL(10,2) NOT NULL,
   total DECIMAL(10,2) NOT NULL,
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  paid_at TIMESTAMP NULL,
+  shipped_at TIMESTAMP NULL,
+  completed_at TIMESTAMP NULL,
+  cancelled_at TIMESTAMP NULL,
 
   CONSTRAINT fk_orders_user
     FOREIGN KEY (user_id)
     REFERENCES users(id)
     ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 
@@ -339,6 +368,71 @@ CREATE TABLE password_resets (
   CONSTRAINT fk_pr_user
     FOREIGN KEY (user_id)
     REFERENCES users(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- TAGS
+-- =========================================================
+-- Reusable product badges / labels.
+-- Examples:
+--   fruit
+--   bestseller
+--   seasonal
+--   new
+--
+-- These are NOT product categories.
+-- Categories answer "what kind of product is this?"
+-- Tags answer "what extra label/attribute does it have?"
+CREATE TABLE tags (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_tags_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- =========================================================
+-- PRODUCT_TAGS
+-- =========================================================
+-- Junction table between products and tags.
+--
+-- One product can have many tags.
+-- One tag can belong to many products.
+--
+-- Example:
+-- products: Mango Donut
+-- tags: fruit, bestseller
+-- product_tags:
+--   (product_id = Mango Donut, tag_id = fruit)
+--   (product_id = Mango Donut, tag_id = bestseller)
+--
+-- ON DELETE CASCADE means:
+-- - if a product is deleted, its product_tags links are deleted too
+-- - if a tag is deleted, its product_tags links are deleted too
+CREATE TABLE product_tags (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  product_id BIGINT UNSIGNED NOT NULL,
+  tag_id INT UNSIGNED NOT NULL,
+
+  PRIMARY KEY (id),
+
+  KEY idx_product_tags_product (product_id),
+  KEY idx_product_tags_tag (tag_id),
+
+  UNIQUE KEY uk_product_tag (product_id, tag_id),
+
+  CONSTRAINT fk_product_tags_product
+    FOREIGN KEY (product_id)
+    REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+
+  CONSTRAINT fk_product_tags_tag
+    FOREIGN KEY (tag_id)
+    REFERENCES tags(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

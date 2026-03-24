@@ -4,6 +4,7 @@ export interface IItem  {
   image: string,
   price: number,
   tint?: string,
+  tags?: string[],
   discription: string,
 }
 

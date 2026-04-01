@@ -1,0 +1,1 @@
+Use `app/components/BoxBuilder.tsx` and `app/components/CartBar.tsx` as the canonical visual reference for all future UI work unless told otherwise.

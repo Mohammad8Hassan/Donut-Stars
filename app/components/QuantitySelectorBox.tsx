@@ -50,14 +50,13 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
       {inCart ? (
         <>
           <button className={`flex items-center justify-center rounded-tl-xl rounded-bl-xl`
-            + (isDecrementDisabled ? " opacity-50 cursor-not-allowed" : "")
             }
             style={{
               border: "1px solid black",
               flex: 1
             }}
             onClick={() => handleBoxRemoved(item)}
-            disabled={isDecrementDisabled}
+            // disabled={isDecrementDisabled}
           >
             <CircleMinus strokeWidth={1} />
           </button>

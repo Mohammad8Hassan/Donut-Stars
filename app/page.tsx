@@ -1,249 +1,248 @@
-'use client'
 import Image from "next/image";
-import logoBanner from '../public/logobanner3.png';
-import mangoBanner from '../public/mangobannerts.png';
-import banner2 from '../public/bannerItem1.png';
-import banner3 from '../public/bannerItem2shadow.png';
-import fresh6 from "../public/fresh6.jpg"
+import Link from "next/link";
+import { ArrowRight, Coffee, PackageOpen, Sparkles } from "lucide-react";
 import donutList from "@/donut-list";
-import work from '../public/job.jpg'
-import footer from '../public/bannerTrans.png'
-import { MdPhoneInTalk as Phone } from 'react-icons/md'
-import { MdEmail as Email } from 'react-icons/md'
-import { MdLocationOn as Location } from 'react-icons/md'
-import Link from 'next/link'
-import Section from "./components/Section";
-import { useEffect, useState } from "react";
-import { useMediaQuery } from "@react-hook/media-query";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-// import './globals.css'
+import drinksList from "@/drinks-list";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(value);
+
+const highlightedDonuts = donutList.slice(0, 6);
 
 export default function Home() {
-  
-  const [selectedDonut, setSelectedDonut] = useState<string>("");
-
-  // const generateDonutList = () => {
-  //   return (
-  //     <ul className="whitespace-nowrap h-full flex items-center gap-x-4">
-  //       {donutList.map(donutItem => {
-  //         let selected = selectedDonut == donutItem.id;
-  //         return (
-  //         <li className="h-full w-1/4 flex-shrink-0" key={donutItem.id}
-  //           style={{}}
-  //           onMouseEnter={() => setSelectedDonut(donutItem.id)} onMouseLeave={() => setSelectedDonut(0)}
-  //         >
-  //           <div className="h-full transition-all duration-300 "
-  //             // style={{ paddingLeft: selected ? "40px" : "0px", paddingRight: selected ? "40px" : "0px" }}
-  //             style={{ 
-  //               backgroundImage: selected ? `radial-gradient(${donutItem.tint} 5%, white 50%)` : "none",
-  //               backgroundPosition:"center", backgroundRepeat:"no-repeat"
-  //             }}
-  //           >
-  //             <div className={
-  //               `h-full flex flex-col items-center 
-                
-  //               xs:rounded-xl gap-y-2`}>
-  //               <Image src={donutItem.image} alt="chocolate" quality={100}
-  //                 style={{ height:selected?"50%":"75%", }}
-  //                 className="object-contain transition-all duration-300" 
-  //               />
-
-  //               <text style={{ }} className="text-center text">{ donutItem.name }</text>
-
-  //               {selected ? (
-  //                 <text style={{ whiteSpace:"normal" }} className="text-center">{donutItem.discription}</text>
-  //               ) : null}
-                
-  //             </div>
-  //           </div>
-  //         </li>
-  //       )})}
-  //     </ul>
-  //   )
-  // }
-  
-  const displayCarousel = () => {
-    return(
-      <Carousel className="w-full h-full mx-10" style={{}}>
-        <CarouselContent className="m-0 h-full" style={{ }}>
-          {donutList.map((donutItem,index) => {
-            let selected = selectedDonut == donutItem.id;
-            return (
-            <CarouselItem key={donutItem.id} className={`basis-1/3 p-1 transition-all duration-300 
-              `}
-                style={{  }}
-              onMouseEnter={() => setSelectedDonut(donutItem.id)} onMouseLeave={() => setSelectedDonut("")}
-            >
-              <div className={`h-full ${selected?"mx-1":""}`}
-                // style={{ paddingLeft: selected ? "40px" : "0px", paddingRight: selected ? "40px" : "0px" }}
-                style={{
-                  backgroundImage: selected ? `radial-gradient(${donutItem.tint} 5%, white 50%)` : "none",
-                  backgroundPosition: "center", backgroundRepeat: "no-repeat"
-                }}
-              >
-                <div className={
-                  `h-full flex flex-col items-center ${selected ? 'shadow-none' : 'shadoweded'} xs:rounded-xl gap-y-2`}>
-                  <Image src={`/${donutItem.image}`} alt="chocolate" quality={100} width={1000} height={1000}
-                    style={{ height: selected ? "50%" : "75%", width:"100%"}}
-                    className="object-contain transition-all duration-300"
-                  />
-
-                  <text style={{}} className="text-center text">{donutItem.name}</text>
-
-                  {selected ? (
-                    <text style={{ whiteSpace: "normal" }} className="text-center">{donutItem.discription}</text>
-                  ) : null}
-
-                </div>
-              </div>
-            </CarouselItem>
-          )})}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
-    )
-  }
-
-  useEffect(() => {
-    console.log("selectedDonut: ", selectedDonut)
-  }, [selectedDonut])
-
-  const [isXL, setIsXL] = useState(false);
-
-  const query = useMediaQuery('only screen and (min-width: 1920px)');
-
-  useEffect(() => {
-    setIsXL(query);
-  }, [query])
-
-  
   return (
-    <div className="min-h-full flex flex-col bg-white gap-10 px-16 pt-1" 
-      style={{width:"100%"}}
-    >
-      
-      {/* Header */}
-      {/* <div className="xs:max-h-[500px] xs:min-h-0 h-[200px] xs:h-auto ">
-        <Image src={logoBanner} alt="logoBanner" width={undefined} quality={100}
-        className="h-full object-cover" />
-      </div> */}
+    <main className="relative -mt-[7.5rem] overflow-hidden bg-[linear-gradient(180deg,#fff7f5_0%,#ffffff_24%,#fffaf3_100%)] pb-16 pt-[7.5rem] sm:-mt-[8.5rem] sm:pt-[8.5rem]">
+      <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.18),transparent_38%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_34%)]" />
 
-      {/* Fresh-Order */}
-      <Section imageSrc={fresh6} height={85}>
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-6 pt-2 sm:px-6 lg:px-8 lg:pb-8">
+        <div className="relative min-h-[72vh] overflow-hidden rounded-[40px] border border-rose-100 bg-zinc-950 shadow-[0_30px_80px_rgba(15,23,42,0.16)]">
+          <Image
+            src="/landing/freshwindow.jpg"
+            alt="Fresh donuts in the display"
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(24,24,27,0.80)_0%,rgba(24,24,27,0.52)_38%,rgba(24,24,27,0.18)_100%)]" />
 
-        <div id="content" style={{ width: "100%", height: "100%", 
-          background:"linear-gradient(to right, #f7f7f7, white)"}} 
-          className="flex flex-row items-center justify-center overflow-clip "
-        >
-          <div className="" style={{ flex: '1 1 0px' }}>
-            <Image src={mangoBanner} alt="freshly baked" width={undefined} quality={100}
-              className="object-fit h-full"
-            />
-          </div>
-
-
-          <div style={{ flex: '1 1 0px', height:"100%", }}
-            className="overflow-clip flex flex-col items-center justify-center px-8"
-          >
-            <div style={{ flex: '3 1 0px', }} className="flex flex-col items-center justify-center gap-5">
-              <p className={`header`} style={{ fontSize: "4vw", width:"100%", color:"green", textAlign:"center"}}>
-                Mango on a Donut?
-              </p>
-              <p className="text" style={{ textAlign: "center" }}>
-                Our donuts are freshly baked every day to ensure the perfect balance of softness and flavor
-                in every bite. We take pride in using only the finest ingredients, so you can enjoy donuts that are always warm,
-                fluffy, and delicious. Whether you’re craving something classic or a unique flavor, our freshly baked donuts are
-                the ultimate treat!
-              </p>
-            </div>
-            
-            <Link href={'/buy'} style={{ flex: '1 1 0px',  }} className="flex flex-col items-center justify-center">
-              <div
-                className="bg-items p-3 rounded-md shadow-md hover:bg-orange-400 hover:shadow-xl"
-              >
-                <p className="text-xl">Get Donuts</p>
-              </div>
-            </Link>
-          </div>
-          
-        </div>
-
-      </Section>
-
-      <Section imageSrc={fresh6} height={isXL ? 60 : 60}>
-
-        <div id="content" style={{ width: "100%", height: "100%", }}
-          className="flex flex-row items-center justify-center overflow-clip px-10"
-        >
-          {/* <div className="" style={{ flex: '1 1 0px' }}>
-            <Image src={banner2} alt="freshly baked" width={undefined} quality={100}
-              className="object-fit h-full"
-            />
-          </div> */}
-
-
-          <div style={{ flex: '1 1 0px', height: "100%", }}
-            className="overflow-clip flex flex-col items-center justify-center px-8"
-          >
-            <div style={{ flex: '3 1 0px', }} className="flex flex-col items-center justify-center gap-5">
-              <p className={`header`} style={{ fontSize: "3vw", width: "100%", color: "green" , textAlign:"center"}}>
-                Refreshing Summer Sips
-              </p>
-              <p className="text" style={{ textAlign: "center" }}>
-                There's nothing better than a cold drink on a hot day. 
-                That's why we serve up a variety of refreshing beverages 
-                to pair with your favorite donuts. From creamy iced lattes 
-                to fruity blends and sparkling coolers, our drinks are the 
-                perfect way to stay cool, hydrated, and happy all summer long
-              </p>
+          <div className="relative flex min-h-[72vh] max-w-3xl flex-col justify-center px-6 py-10 text-white sm:px-8 lg:px-12">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-200 backdrop-blur-md">
+              <Sparkles className="h-4 w-4" />
+              Fresh daily, styled to match the app
             </div>
 
-            <Link href={'/buy'} style={{ flex: '1 1 0px', }} className="flex flex-col items-center justify-center">
-              <div
-                className="bg-items p-3 rounded-md shadow-md hover:bg-orange-400 hover:shadow-xl"
+            <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-7xl">
+              Big visuals, softer polish, and donuts that still lead the page.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
+              A cleaner landing page with wider sections, warmer gradients, and
+              room for the photography to do more of the work.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                href="/buy"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100"
               >
-                <p className="text-xl">Get Donuts</p>
+                Order Donuts
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <p className="text-sm font-medium text-white/70">
+                Build 3, 6, or 12 packs with your favorite lineup.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">
+                Top picks
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">
+                The carousel stays, but the section breathes more now.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
+                Same interaction idea, just restyled with the rounded card language
+                from the rest of the app and given more room on the page.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 px-10 sm:px-12">
+            <Carousel opts={{ align: "start", loop: true }} className="w-full">
+              <CarouselContent className="-ml-3">
+                {highlightedDonuts.map((donut) => (
+                  <CarouselItem
+                    key={donut.id}
+                    className="pl-3 md:basis-1/2 xl:basis-1/3"
+                  >
+                    <article className="group h-full rounded-[30px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500">
+                          Donut
+                        </span>
+                        <span className="text-sm font-semibold text-zinc-500">
+                          {formatCurrency(donut.price)}
+                        </span>
+                      </div>
+
+                      <div className="relative mt-5 h-52 rounded-[28px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_55%)]">
+                        <Image
+                          src={`/${donut.image}`}
+                          alt={donut.name}
+                          fill
+                          className="object-contain p-4 transition duration-300 group-hover:scale-105"
+                        />
+                      </div>
+
+                      <h3 className="mt-5 text-xl font-black tracking-tight text-zinc-950">
+                        {donut.name}
+                      </h3>
+                      <p className="mt-3 text-sm leading-6 text-zinc-600">
+                        {donut.discription}
+                      </p>
+                    </article>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 h-11 w-11 border-rose-200 bg-white text-zinc-900 hover:bg-rose-50" />
+              <CarouselNext className="right-0 h-11 w-11 border-rose-200 bg-white text-zinc-900 hover:bg-rose-50" />
+            </Carousel>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-white shadow-[0_26px_60px_rgba(15,23,42,0.10)]">
+          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-12">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-500">
+                <PackageOpen className="h-4 w-4" />
+                Custom boxes
               </div>
-            </Link>
+              <h2 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
+                One wide section. One clear message. Build the box you want.
+              </h2>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
+                Choose a 3, 6, or 12 pack and fill it with the donuts you actually
+                want. This section now leans on a larger image and a simpler message
+                instead of splitting into multiple competing blocks.
+              </p>
+              <div className="mt-8 rounded-[28px] border border-zinc-100 bg-[linear-gradient(135deg,#fff7f5,#fffdf7)] p-5 text-sm font-semibold text-zinc-700 shadow-sm">
+                Simple flow: pick a box size, choose your donuts, review the cart,
+                and checkout.
+              </div>
+            </div>
+
+            <div className="relative min-h-[340px] lg:min-h-[520px]">
+              <Image
+                src="/landing/12bbox.jpg"
+                alt="Large donut box assortment"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="" style={{ flex: '1 1 0px' }}>
-            <Image src={banner3} alt="freshly baked" width={undefined} quality={100}
-              className="object-fit h-full"
-            />
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-zinc-950 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
+          <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="relative order-2 min-h-[320px] lg:order-1 lg:min-h-[500px]">
+              <Image
+                src="/landing/birthday.jpg"
+                alt="Donuts for celebration"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(24,24,27,0.36),rgba(24,24,27,0.18))]" />
+            </div>
+
+            <div className="order-1 flex flex-col justify-center p-6 sm:p-8 lg:order-2 lg:p-12">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-200">
+                <Coffee className="h-4 w-4" />
+                Drinks and occasions
+              </div>
+              <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+                Add a drink, bring a box, and make it feel like an event.
+              </h2>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
+                A couple of drinks are enough to support the order, and the larger
+                imagery helps the page feel more like a landing experience instead
+                of a list of small components.
+              </p>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {drinksList.map((drink) => (
+                  <div
+                    key={drink.id}
+                    className="rounded-[24px] border border-white/10 bg-white/5 p-4"
+                  >
+                    <p className="text-sm font-semibold text-white">{drink.name}</p>
+                    <p className="mt-1 text-sm text-white/60">
+                      {formatCurrency(drink.price)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-
         </div>
+      </section>
 
-      </Section>
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 pt-6 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[40px] border border-rose-100 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_45%,#fff7ed_100%)] shadow-[0_28px_70px_rgba(15,23,42,0.10)]">
+          <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">
+                Ready when you are
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
+                Start an order that feels a little more special.
+              </h2>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
+                Wider sections, bigger imagery, cleaner structure, and the carousel
+                still right where it should be.
+              </p>
 
-      {/* donuts */}
-      <div className="w-full sm:max-h-[500px] sm:h-[500px] flex flex-col">
-        <h1 className="mx-auto text" style={{ fontSize: "2vw" }} >Our Top Picks:</h1>
+              <div className="mt-8">
+                <Link
+                  href="/buy"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
+                >
+                  Start Your Order
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
 
-        {/* <div className="h-full xs:rounded-xl p-3 overflow-x-auto overflow-y-hidden">
-          {generateDonutList()}
-        </div> */}
-
-        <div className="h-full xs:rounded-xl p-3 flex flex-row justify-center items-center overflow-y-hidden">
-          {displayCarousel()}
+            <div className="relative min-h-[300px] lg:min-h-[420px]">
+              <Image
+                src="/landing/asset2.jpg"
+                alt="Large donut landing visual"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-
-
-      {/* jobs */}
-      <Section imageSrc={work} height={50} mrgn={20}>
-        <div className="flex flex-auto flex-col items-center justify-center h-[150px] xs:h-auto">
-          <h1 className="mb-3" style={{ fontSize: "1.5vw" }}>Freshly baked daily</h1>
-          <h2 style={{ fontSize: "1.5vw" }}>New sensations..</h2>
-        </div>
-      </Section>
-
-
-      
-      
-    </div>
-  )
+      </section>
+    </main>
+  );
 }

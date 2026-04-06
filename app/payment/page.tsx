@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
+import { CreditCard, MapPin, Receipt } from "lucide-react";
 
 import { authFetch } from "@/app/api/authFetch";
 import { useAppSelector } from "../store/hooks";
@@ -27,15 +28,35 @@ type PaymentState = {
   paymentMethod: string;
 };
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(value);
+
+const formatCardNumber = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 19);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+};
+
+const formatExpiry = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+};
+
+const formatCvc = (value: string) => value.replace(/\D/g, "").slice(0, 4);
+
 export default function PaymentPage(): JSX.Element {
   const dispatch = useDispatch();
   const cartItems = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartTotal);
+  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const shipping = subtotal > 20 ? 0 : 2.5;
+  const shipping = cartItems.length === 0 ? 0 : subtotal > 20 ? 0 : 2.5;
   const total = +(subtotal + shipping).toFixed(2);
 
-  // Payment input state (demo-only card form).
   const [form, setForm] = useState<PaymentState>({
     cardNumber: "",
     expiry: "",
@@ -43,7 +64,6 @@ export default function PaymentPage(): JSX.Element {
     paymentMethod: "demo-card",
   });
 
-  // Address state loaded from the same /api/addresses source used in account page.
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
@@ -57,7 +77,6 @@ export default function PaymentPage(): JSX.Element {
     setForm((p) => ({ ...p, [key]: value }));
   }
 
-  // Normalize DB-backed default flag (can arrive as boolean/0/1/string).
   function isDefaultAddress(value: Address["is_default"]) {
     return value === true || value === 1 || value === "1";
   }
@@ -82,7 +101,6 @@ export default function PaymentPage(): JSX.Element {
 
       setAddresses(normalized);
 
-      // Prefer the default address, otherwise first one.
       const defaultAddress = normalized.find((a) => a.is_default);
       setSelectedAddressId(defaultAddress?.id ?? normalized[0]?.id ?? null);
     } catch {
@@ -96,23 +114,45 @@ export default function PaymentPage(): JSX.Element {
     loadAddresses();
   }, [loadAddresses]);
 
+  useEffect(() => {
+    if (form.paymentMethod === "cash-on-delivery") {
+      setFieldErrors((current) => ({
+        ...current,
+        cardNumber: undefined,
+        expiry: undefined,
+        cvc: undefined,
+      }));
+    }
+  }, [form.paymentMethod]);
+
   function validate(): Partial<Record<keyof PaymentState, string>> {
     const errors: Partial<Record<keyof PaymentState, string>> = {};
+
+    if (form.paymentMethod === "cash-on-delivery") {
+      return errors;
+    }
 
     if (!/^\d{13,19}$/.test(form.cardNumber.replace(/\s+/g, ""))) {
       errors.cardNumber = "Enter a valid card number.";
     }
 
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(form.expiry)) {
-      errors.expiry = "Expiry must be MM/YY.";
+      errors.expiry = "Enter expiry as MM/YY.";
     }
 
     if (!/^\d{3,4}$/.test(form.cvc)) {
-      errors.cvc = "CVC must be 3 or 4 digits.";
+      errors.cvc = "Enter a valid CVC.";
     }
 
     return errors;
   }
+
+  const payButtonLabel = useMemo(() => {
+    if (processing) return "Processing...";
+    if (success) return "Order placed";
+    if (form.paymentMethod === "cash-on-delivery") return "Place Order";
+    return `Pay ${formatCurrency(total)}`;
+  }, [form.paymentMethod, processing, success, total]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -141,7 +181,6 @@ export default function PaymentPage(): JSX.Element {
     try {
       const cardNumber = form.cardNumber.replace(/\s+/g, "");
 
-      // Place order using selected saved address + cart items.
       const res = await authFetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,12 +189,13 @@ export default function PaymentPage(): JSX.Element {
           items: cartItems,
           payment: {
             method: form.paymentMethod,
-            provider: "demo",
-            last4: cardNumber.slice(-4),
-            reference: `demo_${crypto.randomUUID()}`,
-            metadata: {
-              expiry: form.expiry,
-            },
+            provider: form.paymentMethod === "cash-on-delivery" ? "cash" : "demo",
+            last4: form.paymentMethod === "cash-on-delivery" ? undefined : cardNumber.slice(-4),
+            reference: `${form.paymentMethod}_${crypto.randomUUID()}`,
+            metadata:
+              form.paymentMethod === "cash-on-delivery"
+                ? { type: "cash-on-delivery" }
+                : { expiry: form.expiry },
           },
         }),
       });
@@ -176,198 +216,262 @@ export default function PaymentPage(): JSX.Element {
   }
 
   return (
-    <>
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-pink-300 opacity-20 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-[420px] h-[420px] rounded-full bg-purple-300 opacity-20 blur-3xl" />
+    <main className="relative isolate overflow-hidden bg-zinc-50">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,_rgba(251,113,133,0.18),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(251,191,36,0.16),_transparent_24%),linear-gradient(135deg,_#fff7ed_0%,_#ffffff_46%,_#fff1f2_100%)]" />
+      <div className="absolute inset-0 -z-10 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:34px_34px]" />
 
-        <svg
-          className="absolute inset-0 w-full h-full opacity-10"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1.5" fill="black" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
-        </svg>
-      </div>
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
+          <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50 px-6 py-8 sm:px-8">
+            <h1 className="text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">Payment</h1>
+            <p className="mt-3 text-sm leading-7 text-zinc-600 sm:text-base">
+              Choose a delivery address, select your payment method, and place your order.
+            </p>
+          </div>
+        </section>
 
-      <div className="mx-auto max-w-5xl py-10 px-4 flex flex-col gap-8">
-        <h1 className="text-3xl font-bold mb-2">Payment</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <form
             onSubmit={handleSubmit}
-            className="md:col-span-2 bg-white rounded-xl shadow-sm p-6 border"
+            className="rounded-[32px] border border-white/70 bg-white/85 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6"
           >
-            <div className="flex items-center justify-between mb-4 gap-3">
-              <h2 className="text-xl font-semibold">Delivery Address</h2>
-              <Link href="/account/addresses" className="text-sm text-pink-600 hover:underline">
-                Manage Addresses
-              </Link>
-            </div>
-
-            {loadingAddresses && <p className="text-sm text-gray-500 mb-4">Loading addresses...</p>}
-
-            {!loadingAddresses && addresses.length === 0 && (
-              <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-                No saved addresses found. Add one before placing your order.
-              </div>
-            )}
-
-            {!loadingAddresses && addresses.length > 0 && (
-              <div className="mb-6 flex flex-col gap-3">
-                {addresses.map((addr) => (
-                  <label
-                    key={addr.id}
-                    className={`rounded-lg border p-3 cursor-pointer ${
-                      selectedAddressId === addr.id ? "border-pink-500 bg-pink-50" : "border-gray-200"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="selectedAddress"
-                        checked={selectedAddressId === addr.id}
-                        onChange={() => setSelectedAddressId(addr.id)}
-                        className="mt-1"
-                      />
-                      <div className="text-sm">
-                        <p className="font-medium">
-                          {addr.label ?? "Address"}
-                          {isDefaultAddress(addr.is_default) && (
-                            <span className="ml-2 text-xs text-pink-600 font-semibold">DEFAULT</span>
-                          )}
-                        </p>
-                        <p>{addr.full_name}</p>
-                        <p>{addr.phone}</p>
-                        <p>
-                          {addr.line1}, {addr.city}
-                        </p>
-                        {addr.postal_code && <p>{addr.postal_code}</p>}
-                        <p>{addr.country}</p>
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            <h2 className="text-xl font-semibold mt-6 mb-4">Payment Details (Demo Only)</h2>
-
-            <label className="block mb-4">
-              <span className="block text-sm mb-1">Card Number</span>
-              <input
-                className={`w-full border rounded-lg px-3 py-2 ${fieldErrors.cardNumber ? "border-red-500" : "border-gray-300"}`}
-                value={form.cardNumber}
-                onChange={(e) => update("cardNumber", e.target.value)}
-                placeholder="4242 4242 4242 4242"
-              />
-              {fieldErrors.cardNumber && (
-                <p className="text-red-500 text-sm mt-1">{fieldErrors.cardNumber}</p>
-              )}
-            </label>
-
-            <div className="flex gap-4">
-              <label className="block flex-1 mb-4">
-                <span className="block text-sm mb-1">Expiry (MM/YY)</span>
-                <input
-                  className={`w-full border rounded-lg px-3 py-2 ${fieldErrors.expiry ? "border-red-500" : "border-gray-300"}`}
-                  value={form.expiry}
-                  onChange={(e) => update("expiry", e.target.value)}
-                  placeholder="12/25"
-                />
-                {fieldErrors.expiry && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.expiry}</p>
-                )}
-              </label>
-
-              <label className="block w-32 mb-4">
-                <span className="block text-sm mb-1">CVC</span>
-                <input
-                  className={`w-full border rounded-lg px-3 py-2 ${fieldErrors.cvc ? "border-red-500" : "border-gray-300"}`}
-                  value={form.cvc}
-                  onChange={(e) => update("cvc", e.target.value)}
-                  placeholder="123"
-                />
-                {fieldErrors.cvc && <p className="text-red-500 text-sm mt-1">{fieldErrors.cvc}</p>}
-              </label>
-
-              <label className="block flex-1 mb-4">
-                <span className="block text-sm mb-1">Payment Method</span>
-                <select
-                  value={form.paymentMethod}
-                  onChange={(e) => update("paymentMethod", e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 border-gray-300"
+            <section className="border-b border-zinc-100 pb-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
+                    <MapPin className="h-6 w-6" strokeWidth={2.1} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Delivery</p>
+                    <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">Choose your address</h2>
+                  </div>
+                </div>
+                <Link
+                  href="/account/addresses"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50"
                 >
-                  <option value="demo-card">Demo Card</option>
-                  <option value="cash-on-delivery">Cash on Delivery</option>
-                </select>
-              </label>
-            </div>
+                  Manage Addresses
+                </Link>
+              </div>
 
-            <button
-              type="submit"
-              disabled={
-                processing ||
-                cartItems.length === 0 ||
-                loadingAddresses ||
-                !selectedAddressId
-              }
-              className="mt-4 w-full bg-pink-500 text-white py-3 rounded-lg hover:bg-pink-600 disabled:opacity-50"
-            >
-              {processing ? "Processing..." : `Pay $${total}`}
-            </button>
+              {loadingAddresses && <p className="mt-5 text-sm text-zinc-500">Loading addresses...</p>}
 
-            {error && <div className="text-red-600 mt-3">{error}</div>}
-            {success && <div className="text-green-600 mt-3">{success}</div>}
+              {!loadingAddresses && addresses.length === 0 && (
+                <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                  No saved addresses found. Add one before placing your order.
+                </div>
+              )}
+
+              {!loadingAddresses && addresses.length > 0 && (
+                <div className="mt-5 grid gap-3">
+                  {addresses.map((addr) => (
+                    <label
+                      key={addr.id}
+                      className={`cursor-pointer rounded-[28px] border p-4 transition ${
+                        selectedAddressId === addr.id
+                          ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
+                          : "border-zinc-200 bg-white hover:border-rose-200"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="selectedAddress"
+                          checked={selectedAddressId === addr.id}
+                          onChange={() => setSelectedAddressId(addr.id)}
+                          className="mt-1 h-4 w-4 accent-rose-500"
+                        />
+                        <div className="text-sm text-zinc-600">
+                          <p className="font-semibold text-zinc-950">
+                            {addr.label ?? "Address"}
+                            {isDefaultAddress(addr.is_default) && (
+                              <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-rose-600">
+                                Default
+                              </span>
+                            )}
+                          </p>
+                          <p className="mt-1">{addr.full_name}</p>
+                          <p>{addr.phone}</p>
+                          <p>
+                            {addr.line1}, {addr.city}
+                          </p>
+                          {addr.postal_code && <p>{addr.postal_code}</p>}
+                          <p>{addr.country}</p>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-white shadow-[0_16px_34px_rgba(15,23,42,0.16)]">
+                  <CreditCard className="h-6 w-6" strokeWidth={2.1} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Payment</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">How would you like to pay?</h2>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => update("paymentMethod", "demo-card")}
+                  className={`rounded-[28px] border p-4 text-left transition ${
+                    form.paymentMethod === "demo-card"
+                      ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
+                      : "border-zinc-200 bg-white hover:border-rose-200"
+                  }`}
+                >
+                  <p className="text-lg font-black text-zinc-950">Card</p>
+                  <p className="mt-1 text-sm text-zinc-600">Pay now with the demo card form.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update("paymentMethod", "cash-on-delivery")}
+                  className={`rounded-[28px] border p-4 text-left transition ${
+                    form.paymentMethod === "cash-on-delivery"
+                      ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
+                      : "border-zinc-200 bg-white hover:border-rose-200"
+                  }`}
+                >
+                  <p className="text-lg font-black text-zinc-950">Cash on delivery</p>
+                  <p className="mt-1 text-sm text-zinc-600">Pay when your order arrives.</p>
+                </button>
+              </div>
+
+              {form.paymentMethod === "demo-card" && (
+                <div className="mt-5 grid gap-4 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Card Number</span>
+                    <input
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.cardNumber ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                      value={form.cardNumber}
+                      onChange={(e) => update("cardNumber", formatCardNumber(e.target.value))}
+                      placeholder="4242 4242 4242 4242"
+                    />
+                    {fieldErrors.cardNumber && <p className="mt-1 text-sm text-red-500">{fieldErrors.cardNumber}</p>}
+                  </label>
+
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_120px]">
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Expiry</span>
+                      <input
+                        inputMode="numeric"
+                        autoComplete="cc-exp"
+                        className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.expiry ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        value={form.expiry}
+                        onChange={(e) => update("expiry", formatExpiry(e.target.value))}
+                        placeholder="MM/YY"
+                      />
+                      {fieldErrors.expiry && <p className="mt-1 text-sm text-red-500">{fieldErrors.expiry}</p>}
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm font-semibold text-zinc-700">CVC</span>
+                      <input
+                        inputMode="numeric"
+                        autoComplete="cc-csc"
+                        className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.cvc ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        value={form.cvc}
+                        onChange={(e) => update("cvc", formatCvc(e.target.value))}
+                        placeholder="123"
+                      />
+                      {fieldErrors.cvc && <p className="mt-1 text-sm text-red-500">{fieldErrors.cvc}</p>}
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {error && <div className="mt-5 rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+              {success && <div className="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
+
+              <button
+                type="submit"
+                disabled={processing || cartItems.length === 0 || loadingAddresses || !selectedAddressId || !!success}
+                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {payButtonLabel}
+              </button>
+            </section>
           </form>
 
-          <aside className="bg-white rounded-xl shadow-sm p-6 border h-fit">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-
-            {cartItems.length === 0 ? (
-              <p>Your cart is empty.</p>
-            ) : (
-              <>
-                <ul className="divide-y">
-                  {cartItems.map((item) => (
-                    <li key={item.id + (item.boxID ?? "")} className="py-3 flex justify-between">
-                      <span>
-                        {item.name} x {item.quantity}
-                      </span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-4 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>${shipping.toFixed(2)}</span>
-                  </div>
+          <aside className="xl:sticky xl:top-8">
+            <section className="rounded-[32px] border border-zinc-950/10 bg-zinc-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-7">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
+                  <Receipt className="h-6 w-6" strokeWidth={2.1} />
                 </div>
-
-                <div className="flex justify-between text-lg font-semibold mt-3 pt-3 border-t">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-300">Summary</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight">{itemCount} item{itemCount === 1 ? "" : "s"}</h2>
                 </div>
+              </div>
 
-                <p className="text-xs text-gray-500 mt-3">
-                  Demo payment form only. Order is saved in database.
-                </p>
-              </>
-            )}
+              {cartItems.length === 0 ? (
+                <div className="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm text-zinc-300">
+                  Your cart is empty.
+                </div>
+              ) : (
+                <>
+                  <div className="mt-6 space-y-3 rounded-[28px] border border-white/10 bg-white/5 p-4">
+                    {cartItems.map((item) => (
+                      <div key={item.id + (item.boxID ?? "")} className="flex items-start justify-between gap-3 text-sm">
+                        <span className="text-zinc-300">
+                          {item.name} x {item.quantity}
+                        </span>
+                        <span className="font-semibold text-white">{formatCurrency(item.price * item.quantity)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 space-y-3 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm">
+                    <div className="flex items-center justify-between gap-3 text-zinc-300">
+                      <span>Subtotal</span>
+                      <span className="font-semibold text-white">{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 text-zinc-300">
+                      <span>Shipping</span>
+                      <span className="font-semibold text-white">{shipping === 0 ? "Free" : formatCurrency(shipping)}</span>
+                    </div>
+                    <div className="h-px bg-white/10" />
+                    <div className="flex items-end justify-between gap-3">
+                      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-300">Total</span>
+                      <span className="text-3xl font-black tracking-tight text-white">{formatCurrency(total)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <p className="mt-4 text-sm leading-6 text-zinc-300">
+                Orders are saved after payment or when cash on delivery is selected.
+              </p>
+
+              <div className="mt-6 flex flex-col gap-3">
+                <Link
+                  href="/checkout"
+                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  Back to Checkout
+                </Link>
+                {success && (
+                  <Link
+                    href="/buy"
+                    className="inline-flex h-12 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400"
+                  >
+                    Start New Order
+                  </Link>
+                )}
+              </div>
+            </section>
           </aside>
         </div>
       </div>
-    </>
+    </main>
   );
 }

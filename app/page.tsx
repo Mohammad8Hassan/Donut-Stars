@@ -11,13 +11,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(value);
-
 const highlightedDonuts = donutList.slice(0, 6);
 
 export default function Home() {
@@ -91,26 +84,25 @@ export default function Home() {
                     key={donut.id}
                     className="pl-3 md:basis-1/2 xl:basis-1/3"
                   >
-                    <article className="group h-full rounded-[30px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500">
-                          Donut
-                        </span>
-                        <span className="text-sm font-semibold text-zinc-500">
-                          {formatCurrency(donut.price)}
+                    <article className="group relative h-full overflow-hidden rounded-[32px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:border-rose-200 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
+                      <div className="absolute inset-x-6 top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.16),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" />
+
+                      <div className="relative flex items-center justify-between gap-3">
+                        <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500 transition duration-300 group-hover:border-rose-300 group-hover:bg-white">
+                          {donut.tags?.[0] ?? "Signature"}
                         </span>
                       </div>
 
-                      <div className="relative mt-5 h-52 rounded-[28px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_55%)]">
+                      <div className="relative mt-4 h-64 rounded-[30px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_58%)] transition duration-300 group-hover:bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.18),transparent_62%)] sm:h-72">
                         <Image
                           src={`/${donut.image}`}
                           alt={donut.name}
                           fill
-                          className="object-contain p-4 transition duration-300 group-hover:scale-105"
+                          className="object-contain p-2 transition duration-500 group-hover:scale-[1.12] group-hover:-rotate-2 sm:p-0"
                         />
                       </div>
 
-                      <h3 className="mt-5 text-xl font-black tracking-tight text-zinc-950">
+                      <h3 className="mt-4 text-xl font-black tracking-tight text-zinc-950 transition duration-300 group-hover:text-rose-600">
                         {donut.name}
                       </h3>
                       <p className="mt-3 text-sm leading-6 text-zinc-600">
@@ -195,9 +187,7 @@ export default function Home() {
                     className="rounded-[24px] border border-white/10 bg-white/5 p-4"
                   >
                     <p className="text-sm font-semibold text-white">{drink.name}</p>
-                    <p className="mt-1 text-sm text-white/60">
-                      {formatCurrency(drink.price)}
-                    </p>
+                    <p className="mt-1 text-sm text-white/60">{drink.price}</p>
                   </div>
                 ))}
               </div>

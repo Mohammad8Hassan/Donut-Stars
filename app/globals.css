@@ -39,10 +39,6 @@ html, body {
   background-image: linear-gradient(transparent, #F8E8D7, transparent);
 }
 
-.footer-bg {
-  background-image: linear-gradient(transparent 40%, #F8E8D7);
-}
-
 .work-position {
   object-position: 50% 35%;
 }
@@ -119,6 +115,7 @@ html, body {
     @apply bg-background text-foreground;
   }
 }
+
 
 
 

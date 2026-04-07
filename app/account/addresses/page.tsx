@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { authFetch } from "@/app/api/authFetch";
+import { AccountCard, AccountInput, AccountSectionHeading } from "@/app/components/account/AccountUi";
 
-// `is_default` may arrive as boolean/number/string from DB JSON.
-// We normalize it before any UI or payload logic.
 export interface Address {
   id: number;
   label: string | null;
@@ -28,7 +28,6 @@ type AddressFormState = {
   is_default: boolean;
 };
 
-// Shared empty state used for both Add and Edit form resets.
 const emptyForm = (): AddressFormState => ({
   label: "",
   full_name: "",
@@ -40,7 +39,6 @@ const emptyForm = (): AddressFormState => ({
   is_default: false,
 });
 
-// Convert raw address model into strict form model (especially `is_default`).
 const toFormState = (addr: Address): AddressFormState => ({
   label: addr.label ?? "",
   full_name: addr.full_name,
@@ -52,7 +50,6 @@ const toFormState = (addr: Address): AddressFormState => ({
   is_default: addr.is_default === true || addr.is_default === 1 || addr.is_default === "1",
 });
 
-// Build consistent API payload for Add/Edit operations.
 const buildPayload = (form: AddressFormState) => ({
   label: form.label.trim() || null,
   full_name: form.full_name.trim(),
@@ -63,6 +60,75 @@ const buildPayload = (form: AddressFormState) => ({
   country: form.country.trim(),
   is_default: form.is_default,
 });
+
+function AddressFormFields({
+  form,
+  setForm,
+}: {
+  form: AddressFormState;
+  setForm: Dispatch<SetStateAction<AddressFormState>>;
+}) {
+  return (
+    <div className="grid gap-4">
+      <AccountInput
+        label="Label"
+        placeholder="Home, Office, Gift..."
+        value={form.label}
+        onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))}
+      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AccountInput
+          label="Full Name"
+          placeholder="Full name"
+          value={form.full_name}
+          onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
+        />
+        <AccountInput
+          label="Phone"
+          placeholder="Phone number"
+          value={form.phone}
+          onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+        />
+      </div>
+      <AccountInput
+        label="Address Line"
+        placeholder="Street, building, unit..."
+        value={form.line1}
+        onChange={(e) => setForm((prev) => ({ ...prev, line1: e.target.value }))}
+      />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AccountInput
+          label="City"
+          placeholder="City"
+          value={form.city}
+          onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
+        />
+        <AccountInput
+          label="Postal Code"
+          placeholder="Postal code"
+          value={form.postal_code}
+          onChange={(e) => setForm((prev) => ({ ...prev, postal_code: e.target.value }))}
+        />
+        <AccountInput
+          label="Country"
+          placeholder="Country"
+          value={form.country}
+          onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
+        />
+      </div>
+
+      <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">
+        <input
+          type="checkbox"
+          checked={form.is_default}
+          onChange={(e) => setForm((prev) => ({ ...prev, is_default: e.target.checked }))}
+          className="h-4 w-4 rounded border-zinc-300 text-rose-500 focus:ring-rose-300"
+        />
+        Set as default address
+      </label>
+    </div>
+  );
+}
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -78,18 +144,13 @@ export default function AddressesPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
-  // Reused after create/update/delete so screen always reflects DB state.
   const loadAddresses = async () => {
-    // Avoid stale cached responses when default flag changes.
     const res = await authFetch("/api/addresses", { cache: "no-store" });
     if (!res.ok) {
       throw new Error("Failed to load addresses");
     }
 
     const data = await res.json();
-    // Main bug fix:
-    // MySQL TINYINT often comes through as 0/1 (sometimes string), not boolean.
-    // Without this normalization, default checkbox and badge can desync.
     const normalized = (data.addresses ?? []).map((addr: Address) => ({
       ...addr,
       is_default: addr.is_default === true || addr.is_default === 1 || addr.is_default === "1",
@@ -115,13 +176,7 @@ export default function AddressesPage() {
     e.preventDefault();
     setAddError(null);
 
-    if (
-      !form.full_name.trim() ||
-      !form.phone.trim() ||
-      !form.line1.trim() ||
-      !form.city.trim() ||
-      !form.country.trim()
-    ) {
+    if (!form.full_name.trim() || !form.phone.trim() || !form.line1.trim() || !form.city.trim() || !form.country.trim()) {
       setAddError("Please fill all required fields.");
       return;
     }
@@ -232,242 +287,149 @@ export default function AddressesPage() {
   };
 
   return (
-      <div className="mx-auto max-w-3xl py-10 px-4 flex flex-col gap-6">
-        <h1 className="text-3xl font-bold">Addresses</h1>
+    <div className="flex flex-col gap-6">
+      <AccountCard>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <AccountSectionHeading
+            title="Manage delivery destinations"
+            description="Your default address can be reused at checkout, while any saved address stays ready for quick selection."
+          />
 
-        <div className="bg-white border shadow-sm rounded-xl p-6">
-          <p className="text-gray-600 mb-4 text-sm">
-            Manage your saved addresses.
-          </p>
-
-          {loading && <p className="text-sm text-gray-500">Loading...</p>}
-          {!loading && listError && <p className="text-sm text-red-600 mb-4">{listError}</p>}
-
-          {!loading && addresses.length === 0 && (
-            <p className="text-sm text-gray-500">
-              You have no saved addresses.
-            </p>
-          )}
-
-          <div className="flex flex-col gap-4">
-            {addresses.map((addr) => (
-              <div
-                key={addr.id}
-                className="border rounded-lg p-4 flex justify-between items-start"
-              >
-                {editingId === addr.id ? (
-                  <form onSubmit={onEditAddress} className="w-full flex flex-col gap-3">
-                    {editError && <p className="text-sm text-red-600">{editError}</p>}
-
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Label (optional)"
-                      value={editingForm.label}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, label: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Full Name *"
-                      value={editingForm.full_name}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, full_name: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Phone *"
-                      value={editingForm.phone}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, phone: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Address Line *"
-                      value={editingForm.line1}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, line1: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="City *"
-                      value={editingForm.city}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, city: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Postal Code (optional)"
-                      value={editingForm.postal_code}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, postal_code: e.target.value }))}
-                    />
-                    <input
-                      className="border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Country *"
-                      value={editingForm.country}
-                      onChange={(e) => setEditingForm((prev) => ({ ...prev, country: e.target.value }))}
-                    />
-
-                    <label className="text-sm flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={editingForm.is_default}
-                        onChange={(e) => setEditingForm((prev) => ({ ...prev, is_default: e.target.checked }))}
-                      />
-                      Set as default address
-                    </label>
-
-                    <div className="flex gap-2 text-sm">
-                      <button
-                        type="submit"
-                        disabled={savingEdit}
-                        className="text-blue-600 hover:underline disabled:opacity-70"
-                      >
-                        {savingEdit ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={savingEdit}
-                        className="text-gray-700 hover:underline disabled:opacity-70"
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditingForm(emptyForm());
-                          setEditError(null);
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <div>
-                      <p className="font-medium">
-                        {addr.label ?? "Address"}
-                        {addr.is_default && (
-                          <span className="ml-2 text-xs text-pink-600 font-semibold">
-                            DEFAULT
-                          </span>
-                        )}
-                      </p>
-
-                      <p className="text-sm">{addr.full_name}</p>
-                      <p className="text-sm">{addr.phone}</p>
-                      <p className="text-sm">
-                        {addr.line1}, {addr.city}
-                      </p>
-                      {addr.postal_code && (
-                        <p className="text-sm">{addr.postal_code}</p>
-                      )}
-                      <p className="text-sm">{addr.country}</p>
-                    </div>
-
-                    <div className="flex gap-2 text-sm">
-                      <button
-                        className="text-blue-600 hover:underline"
-                        onClick={() => startEditing(addr)}
-                        disabled={deletingId === addr.id}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-red-600 hover:underline disabled:opacity-70"
-                        onClick={() => onDeleteAddress(addr.id)}
-                        disabled={deletingId === addr.id}
-                      >
-                        {deletingId === addr.id ? "Deleting..." : "Delete"}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {!showAddForm && (
+          {!showAddForm ? (
             <button
               onClick={() => setShowAddForm(true)}
-              className="mt-6 bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600"
+              className="inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
             >
               Add New Address
             </button>
-          )}
-
-          {showAddForm && (
-            <form onSubmit={onAddAddress} className="mt-6 border rounded-lg p-4 flex flex-col gap-3">
-              <p className="text-sm font-medium">New Address</p>
-
-              {addError && <p className="text-sm text-red-600">{addError}</p>}
-
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Label (optional)"
-                value={form.label}
-                onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Full Name *"
-                value={form.full_name}
-                onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Phone *"
-                value={form.phone}
-                onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Address Line *"
-                value={form.line1}
-                onChange={(e) => setForm((prev) => ({ ...prev, line1: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="City *"
-                value={form.city}
-                onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Postal Code (optional)"
-                value={form.postal_code}
-                onChange={(e) => setForm((prev) => ({ ...prev, postal_code: e.target.value }))}
-              />
-              <input
-                className="border rounded-lg px-3 py-2 text-sm"
-                placeholder="Country *"
-                value={form.country}
-                onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
-              />
-
-              <label className="text-sm flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.is_default}
-                  onChange={(e) => setForm((prev) => ({ ...prev, is_default: e.target.checked }))}
-                />
-                Set as default address
-              </label>
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={savingAdd}
-                  className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 disabled:opacity-70"
-                >
-                  {savingAdd ? "Saving..." : "Save Address"}
-                </button>
-                <button
-                  type="button"
-                  disabled={savingAdd}
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setAddError(null);
-                  }}
-                  className="border px-4 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-70"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+          ) : null}
         </div>
-      </div>
+
+        <div className="mt-6 flex flex-col gap-4">
+          {loading ? <p className="text-sm text-zinc-500">Loading...</p> : null}
+          {!loading && listError ? <p className="text-sm text-rose-600">{listError}</p> : null}
+
+          {!loading && addresses.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+              You have no saved addresses yet.
+            </div>
+          ) : null}
+
+          {addresses.map((addr) => (
+            <div key={addr.id} className="rounded-[28px] border border-zinc-200 bg-gradient-to-br from-white to-rose-50 p-5">
+              {editingId === addr.id ? (
+                <form onSubmit={onEditAddress} className="grid gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-lg font-black tracking-tight text-zinc-950">Edit address</p>
+                    {editError ? <p className="text-sm text-rose-600">{editError}</p> : null}
+                  </div>
+
+                  <AddressFormFields form={editingForm} setForm={setEditingForm} />
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      disabled={savingEdit}
+                      className="inline-flex h-11 items-center justify-center rounded-2xl bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:opacity-70"
+                    >
+                      {savingEdit ? "Saving..." : "Save Address"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={savingEdit}
+                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:bg-white disabled:opacity-70"
+                      onClick={() => {
+                        setEditingId(null);
+                        setEditingForm(emptyForm());
+                        setEditError(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xl font-black tracking-tight text-zinc-950">{addr.label ?? "Address"}</p>
+                      {addr.is_default ? (
+                        <span className="rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-600">
+                          Default
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-3 space-y-1 text-sm leading-6 text-zinc-600">
+                      <p className="font-semibold text-zinc-900">{addr.full_name}</p>
+                      <p>{addr.phone}</p>
+                      <p>{addr.line1}</p>
+                      <p>
+                        {addr.city}
+                        {addr.postal_code ? `, ${addr.postal_code}` : ""}
+                      </p>
+                      <p>{addr.country}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-800 transition hover:border-rose-200 hover:bg-white"
+                      onClick={() => startEditing(addr)}
+                      disabled={deletingId === addr.id}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-rose-200 px-4 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-70"
+                      onClick={() => onDeleteAddress(addr.id)}
+                      disabled={deletingId === addr.id}
+                    >
+                      {deletingId === addr.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </AccountCard>
+
+      {showAddForm ? (
+        <AccountCard>
+          <AccountSectionHeading
+            title="Add another destination"
+            description="Save an address once and keep it available for future orders."
+          />
+
+          <form onSubmit={onAddAddress} className="mt-6 grid gap-4">
+            {addError ? <p className="text-sm text-rose-600">{addError}</p> : null}
+
+            <AddressFormFields form={form} setForm={setForm} />
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={savingAdd}
+                className="inline-flex h-12 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:opacity-70"
+              >
+                {savingAdd ? "Saving..." : "Save Address"}
+              </button>
+              <button
+                type="button"
+                disabled={savingAdd}
+                onClick={() => {
+                  setShowAddForm(false);
+                  setAddError(null);
+                }}
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-zinc-200 px-5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-70"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </AccountCard>
+      ) : null}
+    </div>
   );
 }

@@ -1,16 +1,13 @@
 "use client";
 
-import { userData } from "@/app/context/AuthContext";
 import { useAuth } from "@/app/context/useAuth";
 import { useEffect, useState } from "react";
+import { AccountCard, AccountInput, AccountSectionHeading } from "@/app/components/account/AccountUi";
 
 export default function AccountDetailsPage() {
-
-  const {user, setUser} = useAuth();
-
-  
-  
+  const { user, setUser } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: user?.name || "",
@@ -36,8 +33,8 @@ export default function AccountDetailsPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveMessage(null);
 
-    // Reset errors
     const newErrors = {
       name: form.name.trim() === "",
       email: !form.email.includes("@"),
@@ -46,7 +43,6 @@ export default function AccountDetailsPage() {
 
     setErrors(newErrors);
 
-    // Block submission if any field invalid
     if (Object.values(newErrors).some(Boolean)) return;
 
     setSaving(true);
@@ -55,7 +51,6 @@ export default function AccountDetailsPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // credentials: "include",
       },
       body: JSON.stringify({
         id: user!.id,
@@ -65,8 +60,8 @@ export default function AccountDetailsPage() {
       }),
     });
 
-    if(!response.ok) {
-      alert("Failed to save changes.");
+    if (!response.ok) {
+      setSaveMessage("We couldn't save your changes. Please try again.");
       setSaving(false);
       return;
     }
@@ -75,100 +70,70 @@ export default function AccountDetailsPage() {
     setUser(data.user);
 
     setSaving(false);
-    alert("Saved!");
+    setSaveMessage("Your account details were updated.");
   };
 
   if (!user) {
-    return <div className="mx-auto max-w-3xl py-10 px-4">Please log in to view account details.</div>
+    return (
+      <AccountCard>
+        <p className="text-sm text-zinc-600">Please log in to view account details.</p>
+      </AccountCard>
+    );
   }
 
   return (
-    <>
-      {/* Decorative background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-pink-300 opacity-20 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-[420px] h-[420px] rounded-full bg-purple-300 opacity-20 blur-3xl" />
-        <svg
-          className="absolute inset-0 w-full h-full opacity-10"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <pattern
-              id="dots"
-              x="0"
-              y="0"
-              width="32"
-              height="32"
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx="2" cy="2" r="1.5" fill="black" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
-        </svg>
-      </div>
+    <AccountCard>
+      <AccountSectionHeading
+        title="Basic account information"
+        description="Use the same details you want applied to orders, receipts, and future account updates."
+      />
 
-      <div className="mx-auto max-w-3xl py-10 px-4 flex flex-col gap-6">
-        <h1 className="text-3xl font-bold">Account Details</h1>
-
-        <div className="bg-white border shadow-sm rounded-xl p-6">
-          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Name
-              </label>
-              <input
-                className={`w-full border rounded-lg px-3 py-2 ${errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                className={`w-full border rounded-lg px-3 py-2 ${errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Phone Number
-              </label>
-              <input
-                className={`w-full border rounded-lg px-3 py-2 ${errors.phone ? "border-red-500" : "border-gray-300"
-                  }`}
-                value={form.phone}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, phone: e.target.value }))
-                }
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="mt-4 bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 disabled:opacity-70"
-              disabled={saving}
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          </form>
+      <form className="mt-6 grid gap-5" onSubmit={onSubmit}>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <AccountInput
+            label="Name"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            error={errors.name ? "Please enter your name." : undefined}
+          />
+          <AccountInput
+            label="Email"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            error={errors.email ? "Please enter a valid email." : undefined}
+          />
         </div>
-      </div>
-    </>
+
+        <AccountInput
+          label="Phone Number"
+          value={form.phone}
+          onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+          error={errors.phone ? "Phone numbers should be at least 6 characters." : undefined}
+        />
+
+        {saveMessage ? (
+          <div
+            className={`rounded-2xl px-4 py-3 text-sm ${
+              saveMessage.includes("updated")
+                ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border border-rose-200 bg-rose-50 text-rose-700"
+            }`}
+          >
+            {saveMessage}
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="submit"
+            className="inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500 disabled:opacity-70"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </AccountCard>
   );
 }

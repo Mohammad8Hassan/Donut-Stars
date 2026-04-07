@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountShell } from "../components/account/AccountUi";
 import { Protected } from "../components/Protected";
 
 export default function AccountLayout({
@@ -7,5 +8,9 @@ export default function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <Protected>{children}</Protected>;
+  return (
+    <Protected>
+      <AccountShell>{children}</AccountShell>
+    </Protected>
+  );
 }

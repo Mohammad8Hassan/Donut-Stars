@@ -84,7 +84,7 @@ export default function Home() {
                     key={donut.id}
                     className="pl-3 md:basis-1/2 xl:basis-1/3"
                   >
-                    <article className="group relative h-full overflow-hidden rounded-[32px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-2 hover:border-rose-200 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
+                    <article className="group relative h-full overflow-hidden rounded-[32px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:border-rose-200 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
                       <div className="absolute inset-x-6 top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.16),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 
                       <div className="relative flex items-center justify-between gap-3">

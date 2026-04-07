@@ -1,48 +1,57 @@
+"use client";
+
+import { useState } from "react";
+import { AccountCard, AccountInput, AccountSectionHeading } from "@/app/components/account/AccountUi";
+
 export default function SecurityPage() {
+  const [form, setForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   return (
-    <>
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-pink-300 opacity-20 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-[420px] h-[420px] rounded-full bg-purple-300 opacity-20 blur-3xl" />
-        <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <defs>
-            <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1.5" fill="black" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
-        </svg>
-      </div>
+    <AccountCard>
+      <AccountSectionHeading
+        title="Change your password"
+        description="Enter your current password, choose a stronger replacement, and confirm it before saving."
+      />
 
-
-      <div className="mx-auto max-w-3xl py-10 px-4 flex flex-col gap-6">
-        <h1 className="text-3xl font-bold">Security & Password</h1>
-
-
-        <div className="bg-white border shadow-sm rounded-xl p-6">
-          <form className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Current Password</label>
-              <input type="password" className="w-full border rounded-lg px-3 py-2" />
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium mb-1">New Password</label>
-              <input type="password" className="w-full border rounded-lg px-3 py-2" />
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Confirm Password</label>
-              <input type="password" className="w-full border rounded-lg px-3 py-2" />
-            </div>
-
-
-            <button className="mt-4 bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">Update Password</button>
-          </form>
+      <form className="mt-6 grid gap-5">
+        <AccountInput
+          label="Current Password"
+          type="password"
+          value={form.currentPassword}
+          onChange={(e) => setForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+        />
+        <div className="grid gap-5 lg:grid-cols-2">
+          <AccountInput
+            label="New Password"
+            type="password"
+            value={form.newPassword}
+            onChange={(e) => setForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+          />
+          <AccountInput
+            label="Confirm Password"
+            type="password"
+            value={form.confirmPassword}
+            onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+          />
         </div>
-      </div>
-    </>
+
+        <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          Password submission is still not connected to an API on this page yet, so this redesign keeps the existing behavior and prepares the layout for the next implementation step.
+        </div>
+
+        <div>
+          <button
+            type="button"
+            className="inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
+          >
+            Update Password
+          </button>
+        </div>
+      </form>
+    </AccountCard>
   );
 }

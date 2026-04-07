@@ -14,7 +14,7 @@ export default function MenuItem({ item, children }: MenuItemProps) {
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[30px] border border-zinc-300 bg-white p-3 shadow-[0_18px_42px_rgba(15,23,42,0.10)] ring-1 ring-white/90 transition duration-300 hover:-translate-y-1.5 hover:border-rose-300 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-[30px] border border-zinc-300 bg-white p-3 shadow-[0_18px_42px_rgba(15,23,42,0.10)] ring-1 ring-white/90 transition duration-300 hover:border-rose-300 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
       <div className="relative overflow-hidden rounded-[26px] border border-zinc-200 bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.14),transparent_58%),linear-gradient(180deg,#fff8f4_0%,#fff1ea_100%)] px-4 py-5">
         <div className="absolute inset-x-6 top-4 h-20 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.18),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 

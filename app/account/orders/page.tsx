@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authFetch } from "@/app/api/authFetch";
+import { AccountCard, AccountSectionHeading } from "@/app/components/account/AccountUi";
 
 type OrderItem = {
   id: number;
@@ -114,105 +115,135 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <>
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-pink-300 opacity-20 blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-[420px] h-[420px] rounded-full bg-purple-300 opacity-20 blur-3xl" />
-        <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <defs>
-            <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1.5" fill="black" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots)" />
-        </svg>
-      </div>
+    <div className="flex flex-col gap-6">
+      {!loading && !error && orders.length > 0 ? (
+        <AccountCard>
+          <AccountSectionHeading
+            title="Previous orders"
+            description="Review delivery details, payment info, box contents, and totals from your past orders."
+          />
+        </AccountCard>
+      ) : null}
 
-      <div className="mx-auto max-w-4xl py-10 px-4 flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold">Previous Orders</h1>
-          <p className="text-sm text-gray-600">Review your recent donut runs and delivery details.</p>
-        </div>
+      {loading ? (
+        <AccountCard>
+          <p className="text-sm text-zinc-500">Loading orders...</p>
+        </AccountCard>
+      ) : null}
 
-        {loading ? <div className="bg-white border shadow-sm rounded-xl p-6 text-sm text-gray-500">Loading orders...</div> : null}
-        {!loading && error ? <div className="bg-white border shadow-sm rounded-xl p-6 text-sm text-red-600">{error}</div> : null}
+      {!loading && error ? (
+        <AccountCard>
+          <p className="text-sm text-rose-600">{error}</p>
+        </AccountCard>
+      ) : null}
 
-        {!loading && !error && orders.length === 0 ? (
-          <div className="bg-white border shadow-sm rounded-xl p-6">
-            <p className="text-gray-600 text-sm">You have no past orders yet.</p>
-          </div>
-        ) : null}
+      {!loading && !error && orders.length === 0 ? (
+        <AccountCard>
+          <AccountSectionHeading
+            title="Your order history will appear here"
+            description="Once you place an order, we'll show the items, delivery info, payment summary, and totals in this timeline."
+          />
+        </AccountCard>
+      ) : null}
 
-        {!loading && !error
-          ? orders.map((order) => {
-              const paymentMethod = formatPaymentMethod(order.payment_method);
-              const lastThreeDigits = formatCardDigits(order.payment_last4);
-              const addressParts = [order.shipping_line1, order.shipping_city, order.shipping_postal_code, order.shipping_country]
-                .filter(Boolean)
-                .join(", ");
+      {!loading && !error
+        ? orders.map((order) => {
+            const paymentMethod = formatPaymentMethod(order.payment_method);
+            const lastThreeDigits = formatCardDigits(order.payment_last4);
+            const addressParts = [order.shipping_line1, order.shipping_city, order.shipping_postal_code, order.shipping_country]
+              .filter(Boolean)
+              .join(", ");
 
-              return (
-                <section key={order.id} className="bg-white border shadow-sm rounded-xl p-6 flex flex-col gap-5">
+            return (
+              <AccountCard key={order.id}>
+                <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">Order #{order.id}</p>
-                      <h2 className="text-lg font-semibold">Placed {formatDate(order.created_at)}</h2>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Order #{order.id}</p>
+                      <h3 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">
+                        Placed {formatDate(order.created_at)}
+                      </h3>
                     </div>
 
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium w-fit ${getStatusBadgeClasses(order.status)}`}>
+                    <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
                       {toTitleCase(order.status)}
                     </span>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border bg-gray-50/70 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery</p>
-                      <p className="mt-2 font-medium text-gray-900">{order.shipping_name}</p>
-                      {order.shipping_phone ? <p className="text-sm text-gray-600">{order.shipping_phone}</p> : null}
-                      <p className="mt-1 text-sm text-gray-600">{addressParts}</p>
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/70 p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Delivery</p>
+                      <p className="mt-3 text-base font-semibold text-zinc-950">{order.shipping_name}</p>
+                      {order.shipping_phone ? <p className="mt-1 text-sm text-zinc-600">{order.shipping_phone}</p> : null}
+                      <p className="mt-2 text-sm leading-6 text-zinc-600">{addressParts}</p>
                     </div>
 
-                    <div className="rounded-lg border bg-gray-50/70 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Payment</p>
-                      {paymentMethod ? <p className="mt-2 text-sm text-gray-700">Method: <span className="font-medium text-gray-900">{paymentMethod}</span></p> : null}
-                      {lastThreeDigits ? <p className="text-sm text-gray-700">Card ending in <span className="font-medium text-gray-900">{lastThreeDigits}</span></p> : null}
-                      {!paymentMethod && !lastThreeDigits ? <p className="mt-2 text-sm text-gray-600">No payment details stored for this order.</p> : null}
+                    <div className="rounded-[24px] border border-zinc-200 bg-zinc-50/70 p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Payment</p>
+                      {paymentMethod ? (
+                        <p className="mt-3 text-sm text-zinc-700">
+                          Method: <span className="font-semibold text-zinc-950">{paymentMethod}</span>
+                        </p>
+                      ) : null}
+                      {lastThreeDigits ? (
+                        <p className="mt-1 text-sm text-zinc-700">
+                          Card ending in <span className="font-semibold text-zinc-950">{lastThreeDigits}</span>
+                        </p>
+                      ) : null}
+                      {!paymentMethod && !lastThreeDigits ? (
+                        <p className="mt-3 text-sm text-zinc-600">No payment details stored for this order.</p>
+                      ) : null}
                     </div>
                   </div>
 
                   {order.customer_note ? (
-                    <div className="rounded-lg border bg-amber-50/60 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Order Note</p>
-                      <p className="mt-2 text-sm text-amber-900">{order.customer_note}</p>
+                    <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-700">Order note</p>
+                      <p className="mt-3 text-sm leading-6 text-amber-950">{order.customer_note}</p>
                     </div>
                   ) : null}
 
-                  <div className="border rounded-lg divide-y">
-                    {order.items.map((item) => (
-                      <div key={item.id} className="p-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="overflow-hidden rounded-[24px] border border-zinc-200">
+                    {order.items.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className={`flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:justify-between ${
+                          index !== order.items.length - 1 ? "border-b border-zinc-200" : ""
+                        }`}
+                      >
                         <div className="flex flex-col gap-1">
-                          <p className="font-medium text-gray-900">{item.quantity}x {item.name}</p>
+                          <p className="font-semibold text-zinc-950">
+                            {item.quantity}x {item.name}
+                          </p>
                           {item.capacity !== null && item.boxContents.length > 0 ? (
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm leading-6 text-zinc-600">
                               Filled with {item.boxContents.map((donut) => `${donut.quantity}x ${donut.name}`).join(", ")}
                             </p>
                           ) : null}
                         </div>
-                        <p className="text-sm font-medium text-gray-700">{formatCurrency(item.unitPrice * item.quantity)}</p>
+                        <p className="text-sm font-semibold text-zinc-700">
+                          {formatCurrency(item.unitPrice * item.quantity)}
+                        </p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="grid gap-2 text-sm text-gray-600 sm:justify-items-end">
-                    <p>Subtotal: <span className="font-medium text-gray-900">{formatCurrency(order.subtotal)}</span></p>
-                    <p>Shipping: <span className="font-medium text-gray-900">{formatCurrency(order.shipping)}</span></p>
-                    <p className="text-base">Total: <span className="font-semibold text-gray-900">{formatCurrency(order.total)}</span></p>
+                  <div className="grid gap-2 rounded-[24px] bg-zinc-950 px-5 py-4 text-sm text-white/70 sm:justify-items-end">
+                    <p>
+                      Subtotal: <span className="font-semibold text-white">{formatCurrency(order.subtotal)}</span>
+                    </p>
+                    <p>
+                      Shipping: <span className="font-semibold text-white">{formatCurrency(order.shipping)}</span>
+                    </p>
+                    <p className="text-base">
+                      Total: <span className="font-black text-white">{formatCurrency(order.total)}</span>
+                    </p>
                   </div>
-                </section>
-              );
-            })
-          : null}
-      </div>
-    </>
+                </div>
+              </AccountCard>
+            );
+          })
+        : null}
+    </div>
   );
 }

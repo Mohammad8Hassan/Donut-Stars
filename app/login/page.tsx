@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Loader2, LogIn, Mail, Lock, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/useAuth";
+import AuthShell from "../components/auth/AuthShell";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,28 +17,28 @@ export default function LoginPage() {
   const [user, setUser] = useState("");
   const [pwd, setPwd] = useState("");
   const [errMsg, setErrMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Focus username field on mount
   useEffect(() => {
     userRef.current?.focus();
   }, []);
 
-  // Reset error message when typing
   useEffect(() => {
     setErrMsg("");
   }, [user, pwd]);
 
-  const {setUser : setAuthUser} = useAuth();
+  const { setUser: setAuthUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: user, password: pwd }),
-        credentials: "include", // important for cookies
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -44,91 +47,119 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-
-      console.log("Logged in user:", data);
       setAuthUser(data.user);
 
-      // On success, redirect to dashboard or where user came from
       const redirectTo = searchParams.get("from") || "/";
       router.replace(redirectTo);
     } catch (err: any) {
       setErrMsg(err.message || "Login failed");
       errRef.current?.focus();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-          Sign In
-        </h1>
+    <AuthShell
+      badge="Welcome back"
+      title="Sign in and get back to your box."
+      description="Jump back into Donut Stars with a cleaner, faster checkout-ready login flow inspired by the rest of the storefront."
+      footerLabel="Need an account?"
+      footerHref="/register"
+      footerCta="Create one"
+      asideTitle="Fresh picks, faster checkout, and your account in one place."
+      asideDescription="Your saved details, account settings, and next donut run all start here. Sign in to keep the experience smooth from browse to checkout."
+      asideStats={[
+        { label: "Fast access", value: "Saved session" },
+        { label: "Account hub", value: "Orders + details" },
+        { label: "Checkout ready", value: "Cart stays close" },
+      ]}
+      icon={LogIn}
+      imageSide="right"
+    >
+      {errMsg && (
+        <p
+          ref={errRef}
+          tabIndex={-1}
+          className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 outline-none"
+          aria-live="assertive"
+        >
+          {errMsg}
+        </p>
+      )}
 
-        {errMsg && (
-          <p
-            ref={errRef}
-            className="text-red-500 text-sm mb-4 text-center"
-            aria-live="assertive"
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="email"
+            className="mb-2 block text-sm font-semibold text-zinc-800"
           >
-            {errMsg}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
+            Email
+          </label>
+          <div className="flex h-14 items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 shadow-sm transition focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-100">
+            <Mail className="h-4 w-4 text-zinc-400" />
             <input
-              type="text"
+              type="email"
               id="email"
               ref={userRef}
-              autoComplete="off"
+              autoComplete="email"
               onChange={(e) => setUser(e.target.value)}
               value={user}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="you@example.com"
+              className="h-full w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
             />
           </div>
+        </div>
 
-          <div>
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-3">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-semibold text-zinc-800"
             >
               Password
             </label>
+            <Link
+              href="/register"
+              className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 transition hover:text-rose-500"
+            >
+              Need help?
+            </Link>
+          </div>
+          <div className="flex h-14 items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 shadow-sm transition focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-100">
+            <Lock className="h-4 w-4 text-zinc-400" />
             <input
               type="password"
               id="password"
               onChange={(e) => setPwd(e.target.value)}
               value={pwd}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              className="h-full w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
             />
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-all"
-          >
-            Sign In
-          </button>
-        </form>
-
-        <p className="text-sm text-gray-600 mt-6 text-center">
-          Need an account?{" "}
-          <a
-            href="/register"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Register
-          </a>
-        </p>
-      </div>
-    </main>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            <>
+              Sign In
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

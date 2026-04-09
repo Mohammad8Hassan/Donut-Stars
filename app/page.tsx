@@ -15,8 +15,8 @@ const highlightedDonuts = donutList.slice(0, 6);
 
 export default function Home() {
   return (
-    <main className="relative -mt-[7.5rem] overflow-hidden bg-[linear-gradient(180deg,#fff7f5_0%,#ffffff_24%,#fffaf3_100%)] pb-16 pt-[7.5rem] sm:-mt-[8.5rem] sm:pt-[8.5rem]">
-      <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.18),transparent_38%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_34%)]" />
+    <main className="relative overflow-hidden pb-16">
+      <div className="absolute inset-x-0 top-0 h-[34rem] " />
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-6 pt-2 sm:px-6 lg:px-8 lg:pb-8">
         <div className="relative min-h-[72vh] overflow-hidden rounded-[40px] border border-rose-100 bg-zinc-950 shadow-[0_30px_80px_rgba(15,23,42,0.16)]">
@@ -187,7 +187,7 @@ export default function Home() {
                     className="rounded-[24px] border border-white/10 bg-white/5 p-4"
                   >
                     <p className="text-sm font-semibold text-white">{drink.name}</p>
-                    <p className="mt-1 text-sm text-white/60">{drink.price}</p>
+                    <p className="mt-1 text-sm text-white/60">{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(drink.price)}</p>
                   </div>
                 ))}
               </div>

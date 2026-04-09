@@ -216,9 +216,9 @@ export default function PaymentPage(): JSX.Element {
   }
 
   return (
-    <main className="relative isolate overflow-hidden bg-zinc-50">
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,_rgba(251,113,133,0.18),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(251,191,36,0.16),_transparent_24%),linear-gradient(135deg,_#fff7ed_0%,_#ffffff_46%,_#fff1f2_100%)]" />
-      <div className="absolute inset-0 -z-10 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:34px_34px]" />
+    <main className="relative isolate overflow-hidden">
+      
+      
 
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">

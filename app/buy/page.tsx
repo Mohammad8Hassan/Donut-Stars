@@ -157,8 +157,8 @@ export default function Buy() {
   const activeMeta = tabMeta.find(tab => tab.value === activeTab) ?? tabMeta[0]
 
   return (
-    <main className="relative -mt-[7.5rem] min-h-screen overflow-hidden bg-[linear-gradient(180deg,#fff6f3_0%,#fffaf8_32%,#fff2ea_100%)] pb-24 pt-[8rem] sm:-mt-[8.5rem] sm:pt-[8.8rem]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.12),transparent_30%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.10),transparent_28%)]" />
+    <main className="relative min-h-screen overflow-hidden pb-24">
+      <div className="absolute inset-0 " />
 
       {selectedBox && (
         <BoxBuilder

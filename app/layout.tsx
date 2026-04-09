@@ -32,12 +32,12 @@ export default function RootLayout({
         <AuthProvider>
           <Providers>
             <ScrollProvider>
-              <div className="flex min-h-screen flex-col">
+              <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.18),transparent_38%),radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_34%)]">
                 <Navbar />
 
-                <div className="w-full flex-1">
+                <main className="w-full flex-1 mt-4">
                   {children}
-                </div>
+                </main>
 
                 <CartBar />
                 <div className="shrink-0">

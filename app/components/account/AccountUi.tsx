@@ -62,14 +62,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const initials = getInitials(user?.name, user?.email);
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[linear-gradient(180deg,#fff6f3_0%,#fffdf8_42%,#fff7ed_100%)]">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,_rgba(244,63,94,0.15),_transparent_58%)]" />
-        <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-rose-300/30 blur-3xl" />
-        <div className="absolute -right-16 top-28 h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 h-72 w-[34rem] -translate-x-1/2 rounded-full bg-zinc-950/5 blur-3xl" />
-      </div>
-
+    <div className="relative isolate min-h-screen overflow-hidden">
       <div className="mx-auto grid min-h-screen max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:px-8 lg:py-8">
         <aside className="lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">
           <div className="flex h-full flex-col overflow-hidden rounded-[32px] border border-white/70 bg-zinc-950 text-white shadow-[0_28px_70px_rgba(15,23,42,0.2)]">
@@ -240,6 +233,3 @@ export function AccountInput({
     </label>
   );
 }
-
-
-

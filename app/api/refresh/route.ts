@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { db } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getUserWithRoleById, sanitizeUser, signAccessToken } from "@/lib/auth";
 
 
 export async function POST(req: Request) {
@@ -20,37 +20,26 @@ export async function POST(req: Request) {
 
     console.log("Decoded refresh token:", decoded);
     
-    const [rows]: any = await db.query(
-      "SELECT id, name, role_id, refresh_token_hash FROM users WHERE id = ?",
-      [decoded.userId]
-    );
+    const foundUser = await getUserWithRoleById(decoded.userId);
 
-    console.log("User rows:", rows);
-
-    if (!rows.length) {
+    if (!foundUser) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
-
-    const foundUser = rows[0];
 
     const isMatch = await bcrypt.compare(refreshToken, foundUser.refresh_token_hash);
     if (!isMatch) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
-    const response = NextResponse.json({ user: foundUser }, { status: 200 });
+    const sessionUser = sanitizeUser(foundUser);
+    const response = NextResponse.json({ user: sessionUser }, { status: 200 });
 
-    
-    const accessToken = jwt.sign({
-      userId: foundUser.id,
-      roleId: foundUser.role_id,
-    }, "shhhhh", {
-      expiresIn: "15m",
-    });
+    const accessToken = signAccessToken(sessionUser);
 
     response.cookies.set("accessToken", accessToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 15,
+      path: "/",
     });
 
     return response;

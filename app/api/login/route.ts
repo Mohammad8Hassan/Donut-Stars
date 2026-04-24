@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+import {
+  getUserWithRoleByEmail,
+  sanitizeUser,
+  signAccessToken,
+  signRefreshToken,
+} from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -15,24 +19,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const [rows]: any = await db.query(
-      `
-      SELECT *
-      FROM users
-      WHERE email = ?
-      LIMIT 1
-      `,
-      [email]
-    );
+    const foundUser = await getUserWithRoleByEmail(email);
 
-    if (rows.length === 0) {
+    if (!foundUser) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
-
-    const foundUser = rows[0];
 
     const match = await bcrypt.compare(password, foundUser.password_hash);
 
@@ -43,26 +37,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const accessToken = jwt.sign(
-      { userId: foundUser.id, },
-      "shhhhh",
-      { expiresIn: "15m" }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: foundUser.id },
-      "shhhhhawy",
-      { expiresIn: "7d" }
-    );
+    const sessionUser = sanitizeUser(foundUser);
+    const accessToken = signAccessToken(sessionUser);
+    const refreshToken = signRefreshToken(sessionUser.id);
 
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);
 
     await db.query(
       "UPDATE users SET refresh_token_hash = ? WHERE id = ?",
-      [hashedRefresh, foundUser.id]
+      [hashedRefresh, sessionUser.id]
     );
 
-    const response = NextResponse.json({ user: { id: foundUser.id, email: foundUser.email, name: foundUser.name } });
+    const response = NextResponse.json({ user: sessionUser });
 
     response.cookies.set("accessToken", accessToken, {
       httpOnly: true,

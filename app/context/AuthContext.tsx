@@ -3,10 +3,12 @@ import router from "next/router";
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useEffect, useState } from "react";
 
 export type userData = {
-    id: string;
+    id: number;
     email: string;
     name: string;
-    phone?: string;
+    phone?: string | null;
+    roleId: number;
+    roleName: string;
 };
 
 type AuthContextType = {
@@ -75,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setChecked(true);
             setIsLoading(false);
         }
-    }, []);
+    }, [isLoading]);
 
     // 🔹 Run once on app start
     useEffect(() => {

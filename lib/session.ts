@@ -1,38 +1,84 @@
 import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 
-type AccessTokenPayload = {
+export type SessionUser = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  roleId: number;
+  roleName: string;
+};
+
+type SessionRow = RowDataPacket & {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  role_id: number;
+  role_name: string;
+};
+
+export type SessionData = {
+  user: SessionUser;
+};
+
+export type AccessTokenPayload = {
   userId: number;
+  roleId: number;
+  roleName: string;
   iat: number;
   exp: number;
 };
 
-export async function getSession() {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
+function normalizeUser(row: SessionRow): SessionUser {
+  return {
+    id: Number(row.id),
+    name: row.name,
+    email: row.email,
+    phone: row.phone ?? null,
+    roleId: Number(row.role_id),
+    roleName: row.role_name,
+  };
+}
 
-  console.log("Access Token:", accessToken);
-
-  if (!accessToken) return null;
-
-  console.log("Verifying access token...");
-
-  let payload: AccessTokenPayload;
+export function verifyAccessToken(token: string): AccessTokenPayload | null {
   try {
-    payload = jwt.verify(accessToken, "shhhhh") as AccessTokenPayload;
+    return jwt.verify(token, "shhhhh") as AccessTokenPayload;
   } catch {
     return null;
   }
+}
 
-  console.log("Access token valid, fetching user...");
+export function isAdminUser(user: Pick<SessionUser, "roleName">) {
+  return user.roleName === "admin";
+}
 
-  const [rows] = await db.execute<RowDataPacket[]>(
+export async function getSession(): Promise<SessionData | null> {
+  const cookieStore = cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+
+  if (!accessToken) return null;
+
+  const payload = verifyAccessToken(accessToken);
+  if (!payload) return null;
+
+  const [rows] = await db.execute<SessionRow[]>(
     `
-      SELECT id, name, email, phone
-      FROM users
-      WHERE id = ?
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        u.role_id,
+        r.name AS role_name
+      FROM users u
+      INNER JOIN roles r
+        ON r.id = u.role_id
+      WHERE u.id = ?
       LIMIT 1
     `,
     [payload.userId]
@@ -40,5 +86,25 @@ export async function getSession() {
 
   if (!rows.length) return null;
 
-  return { user: rows[0] };
+  return { user: normalizeUser(rows[0]) };
+}
+
+export async function requireAdmin(): Promise<
+  { session: SessionData; response?: never } | { session?: never; response: NextResponse }
+> {
+  const session = await getSession();
+
+  if (!session) {
+    return {
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  if (!isAdminUser(session.user)) {
+    return {
+      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
+  }
+
+  return { session };
 }

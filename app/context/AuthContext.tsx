@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setChecked(true);
             setIsLoading(false);
         }
-    }, [isLoading]);
+    }, [isLoading]); //check this
 
     // 🔹 Run once on app start
     useEffect(() => {

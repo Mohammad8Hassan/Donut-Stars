@@ -28,6 +28,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!foundUser.password_hash) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
     const match = await bcrypt.compare(password, foundUser.password_hash);
 
     if (!match) {

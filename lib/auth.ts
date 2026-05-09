@@ -2,12 +2,12 @@ import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
 import { SessionUser } from "@/lib/session";
 
-type UserWithRoleRow = {
+export type UserWithRoleRow = {
   id: number | string;
   email: string;
   name: string;
   phone: string | null;
-  password_hash: string;
+  password_hash?: string;
   role_id: number | string;
   role_name: string;
   refresh_token_hash?: string | null;

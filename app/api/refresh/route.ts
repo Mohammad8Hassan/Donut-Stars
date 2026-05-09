@@ -11,7 +11,9 @@ export async function POST(req: Request) {
 
   console.log("Refresh token:", refreshToken);
 
-  if (!refreshToken) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!refreshToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const decoded: any = jwt.verify(refreshToken, "shhhhhawy") as {
@@ -23,11 +25,17 @@ export async function POST(req: Request) {
     const foundUser = await getUserWithRoleById(decoded.userId);
 
     if (!foundUser) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!foundUser.refresh_token_hash) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const isMatch = await bcrypt.compare(refreshToken, foundUser.refresh_token_hash);
-    if (!isMatch) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    if (!isMatch) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const sessionUser = sanitizeUser(foundUser);
     const response = NextResponse.json({ user: sessionUser }, { status: 200 });
@@ -45,6 +53,6 @@ export async function POST(req: Request) {
     return response;
   } catch (err) {
     console.error("REFRESH ERROR:", err);
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

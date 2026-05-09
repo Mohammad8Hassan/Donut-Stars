@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { RowDataPacket } from "mysql2/promise";
+import { sanitizeUser, UserWithRoleRow } from "@/lib/auth";
 
 export type SessionUser = {
   id: number;
@@ -13,14 +14,7 @@ export type SessionUser = {
   roleName: string;
 };
 
-type SessionRow = RowDataPacket & {
-  id: number;
-  name: string;
-  email: string;
-  phone: string | null;
-  role_id: number;
-  role_name: string;
-};
+type SessionRow = RowDataPacket & UserWithRoleRow;
 
 export type SessionData = {
   user: SessionUser;
@@ -33,17 +27,6 @@ export type AccessTokenPayload = {
   iat: number;
   exp: number;
 };
-
-function normalizeUser(row: SessionRow): SessionUser {
-  return {
-    id: Number(row.id),
-    name: row.name,
-    email: row.email,
-    phone: row.phone ?? null,
-    roleId: Number(row.role_id),
-    roleName: row.role_name,
-  };
-}
 
 export function verifyAccessToken(token: string): AccessTokenPayload | null {
   try {
@@ -86,7 +69,7 @@ export async function getSession(): Promise<SessionData | null> {
 
   if (!rows.length) return null;
 
-  return { user: normalizeUser(rows[0]) };
+  return { user: sanitizeUser(rows[0]) };
 }
 
 export async function requireAdmin(): Promise<

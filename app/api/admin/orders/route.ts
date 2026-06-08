@@ -73,7 +73,7 @@ export async function GET(req: Request) {
     // when the order belongs to a registered user.
     values.push(limit);
 
-    const [orders]: any = await db.execute(
+    const [orders]: any = await db.query(
       `
       SELECT
         o.id,
@@ -114,7 +114,7 @@ export async function GET(req: Request) {
 
     // We then load line items for all returned orders in one batch to avoid
     // per-order queries and keep the dashboard responsive as volume grows.
-    const [itemRows]: any = await db.execute(
+    const [itemRows]: any = await db.query(
       `
       SELECT
         oi.id AS order_item_id,
@@ -139,7 +139,7 @@ export async function GET(req: Request) {
     if (orderItemIds.length > 0) {
       // Box contents are stored separately from order_items, so we stitch them back in
       // here to give admins the full composition of custom donut boxes.
-      const [boxRows]: any = await db.execute(
+      const [boxRows]: any = await db.query(
         `
         SELECT
           oibc.order_item_id,

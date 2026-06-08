@@ -49,7 +49,7 @@ export async function getSession(): Promise<SessionData | null> {
   const payload = verifyAccessToken(accessToken);
   if (!payload) return null;
 
-  const [rows] = await db.execute<SessionRow[]>(
+  const [rows] = await db.query<SessionRow[]>(
     `
       SELECT
         u.id,

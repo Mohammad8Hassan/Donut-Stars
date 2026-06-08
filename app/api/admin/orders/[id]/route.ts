@@ -54,7 +54,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     query += " WHERE id = ?";
     values.push(orderId);
 
-    const [result]: any = await db.execute(query, values);
+    const [result]: any = await db.query(query, values);
 
     if (!result?.affectedRows) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });

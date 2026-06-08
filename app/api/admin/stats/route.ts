@@ -1,0 +1,129 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/session";
+
+// These row types mirror the aggregate SQL aliases below.
+// The mysql driver can return numeric aggregates as strings, so we normalize later.
+type OverviewRow = {
+  total_orders: number | string | null;
+  revenue: number | string | null;
+  average_order_value: number | string | null;
+  pending_orders: number | string | null;
+  paid_orders: number | string | null;
+  shipped_orders: number | string | null;
+  completed_orders: number | string | null;
+  cancelled_orders: number | string | null;
+};
+
+type UserSummaryRow = {
+  total_customers: number | string | null;
+  total_admins: number | string | null;
+};
+
+type ProductSummaryRow = {
+  active_products: number | string | null;
+};
+
+type RecentSummaryRow = {
+  orders_last_7_days: number | string | null;
+  revenue_last_7_days: number | string | null;
+};
+
+function toNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export async function GET() {
+  // Every admin analytics endpoint must enforce role checks at the route level,
+  // even though middleware also protects /api/admin/* paths.
+  const guard = await requireAdmin();
+  if (guard.response) {
+    return guard.response;
+  }
+
+  try {
+    // Overview stats are built from the orders table because that is the operational
+    // source of truth for revenue and fulfillment state.
+    const [overviewRows]: any = await db.query(
+      `
+      SELECT
+        COUNT(*) AS total_orders,
+        COALESCE(SUM(total), 0) AS revenue,
+        COALESCE(AVG(total), 0) AS average_order_value,
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_orders,
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) AS paid_orders,
+        COALESCE(SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END), 0) AS shipped_orders,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_orders,
+        COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) AS cancelled_orders
+      FROM orders
+      `
+    );
+
+    // Customer/admin counts are based on roles so the dashboard can show the size
+    // of the customer base separately from internal staff access.
+    const [userRows]: any = await db.query(
+      `
+      SELECT
+        COALESCE(SUM(CASE WHEN r.name = 'customer' THEN 1 ELSE 0 END), 0) AS total_customers,
+        COALESCE(SUM(CASE WHEN r.name = 'admin' THEN 1 ELSE 0 END), 0) AS total_admins
+      FROM users u
+      INNER JOIN roles r
+        ON r.id = u.role_id
+      WHERE u.deleted_at IS NULL
+      `
+    );
+
+    // Product count gives the admin dashboard a quick catalog health snapshot.
+    const [productRows]: any = await db.query(
+      `
+      SELECT COUNT(*) AS active_products
+      FROM products
+      WHERE is_active = TRUE
+      `
+    );
+
+    // A short rolling window gives the dashboard a more actionable signal than
+    // lifetime totals alone.
+    const [recentRows]: any = await db.query(
+      `
+      SELECT
+        COUNT(*) AS orders_last_7_days,
+        COALESCE(SUM(total), 0) AS revenue_last_7_days
+      FROM orders
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      `
+    );
+
+    const overview = (overviewRows?.[0] ?? {}) as OverviewRow;
+    const users = (userRows?.[0] ?? {}) as UserSummaryRow;
+    const products = (productRows?.[0] ?? {}) as ProductSummaryRow;
+    const recent = (recentRows?.[0] ?? {}) as RecentSummaryRow;
+
+    // The API returns frontend-friendly camelCase values so the dashboard component
+    // does not need to understand SQL alias naming or type coercion rules.
+    return NextResponse.json(
+      {
+        stats: {
+          totalOrders: toNumber(overview.total_orders),
+          revenue: toNumber(overview.revenue),
+          averageOrderValue: toNumber(overview.average_order_value),
+          pendingOrders: toNumber(overview.pending_orders),
+          paidOrders: toNumber(overview.paid_orders),
+          shippedOrders: toNumber(overview.shipped_orders),
+          completedOrders: toNumber(overview.completed_orders),
+          cancelledOrders: toNumber(overview.cancelled_orders),
+          totalCustomers: toNumber(users.total_customers),
+          totalAdmins: toNumber(users.total_admins),
+          activeProducts: toNumber(products.active_products),
+          ordersLast7Days: toNumber(recent.orders_last_7_days),
+          revenueLast7Days: toNumber(recent.revenue_last_7_days),
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET /api/admin/stats error:", error);
+    return NextResponse.json({ error: "Failed to load admin stats" }, { status: 500 });
+  }
+}

@@ -20,7 +20,7 @@ export default function CartBar() {
     minimumFractionDigits: 2,
   }).format(total)
 
-  if (hideBarPaths.includes(pathname)) return null
+  if (hideBarPaths.includes(pathname) || pathname.startsWith('/admin')) return null
   if (cart.length === 0) return null
 
   return (

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, UserRound } from 'lucide-react'
+import { LayoutDashboard, LogOut, UserRound } from 'lucide-react'
 import logo from '@/public/logo.png'
 import { useAuth } from '../context/useAuth'
 import { useScroll } from './ScrollProvider'
@@ -79,6 +79,16 @@ export default function Navbar() {
 
           {user ? (
             <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
+              {user.roleName === 'admin' ? (
+                <Link
+                  href="/admin"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-rose-100 sm:h-10"
+                >
+                  <LayoutDashboard className="h-4 w-4 text-rose-500" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Link>
+              ) : null}
+
               <Link
                 href="/account"
                 className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm transition hover:border-rose-200 hover:bg-white/80"

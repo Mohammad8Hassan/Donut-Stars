@@ -209,6 +209,7 @@ export default function PaymentPage(): JSX.Element {
       setSuccess(`Order #${data.orderId} placed successfully.`);
       dispatch(clearCart());
     } catch (err: any) {
+      console.error("Order placement error:", err);
       setError(err?.message ?? "Something went wrong.");
     } finally {
       setProcessing(false);

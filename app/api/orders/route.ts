@@ -207,7 +207,7 @@ async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
 // category, then aggregates duplicates so we store one row per unique donut
 // with the combined quantity rather than one row per slot.
 // ---------------------------------------------------------------------------
-async function resolveDonutProductIds(contents: IncomingCartItem["contents"]): Promise<Array<{ donutProductId: number; quantity: number }>> {
+async function resolveDonutProductIdsforBox(contents: IncomingCartItem["contents"]): Promise<Array<{ donutProductId: number; quantity: number }>> {
   // Map<donutProductId, count> — deduplicates repeated donut choices.
   const map = new Map<number, number>();
 
@@ -550,7 +550,7 @@ export async function POST(req: Request) {
         }
 
         // Validate each chosen donut and deduplicate repeated choices.
-        const donutRows = await resolveDonutProductIds(selectedDonuts);
+        const donutRows = await resolveDonutProductIdsforBox(selectedDonuts);
 
         resolvedItems.push({
           productId: Number(product.id),

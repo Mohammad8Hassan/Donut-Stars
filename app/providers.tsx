@@ -2,30 +2,44 @@
 
 import { Provider } from 'react-redux'
 import { store } from './store/store'
-import { useEffect } from 'react'
-import { hydrate } from './store/cartSlice'
-import router from 'next/router'
+import { useContext, useEffect } from 'react'
+import { clearCart, hydrate } from './store/cartSlice'
+import AuthContext from './context/AuthContext'
 
-export function Providers({ children }: { children: React.ReactNode }) {
+function CartHydrator() {
+  const { user, checked } = useContext(AuthContext)
+
   useEffect(() => {
-    // Rehydrate from localStorage
-    if (typeof window === 'undefined') return
+    if (!checked) return
+
+    const key = user ? `cart_${user.id}` : 'cart_guest'
+
     try {
-      const raw = localStorage.getItem('cart')
-      if (raw) store.dispatch(hydrate(JSON.parse(raw)))
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        store.dispatch(hydrate(JSON.parse(raw)))
+      } else {
+        store.dispatch(clearCart())
+      }
     } catch { }
 
-    // Subscribe to changes
     const unsubscribe = store.subscribe(() => {
       try {
-        localStorage.setItem('cart', JSON.stringify(store.getState().cart))
+        localStorage.setItem(key, JSON.stringify(store.getState().cart))
       } catch { }
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [user?.id, checked])
 
+  return null
+}
 
-
-  return <Provider store={ store }> { children } </Provider>
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <CartHydrator />
+      {children}
+    </Provider>
+  )
 }

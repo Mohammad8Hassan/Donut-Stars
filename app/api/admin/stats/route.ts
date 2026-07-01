@@ -8,9 +8,8 @@ type OverviewRow = {
   total_orders: number | string | null;
   revenue: number | string | null;
   average_order_value: number | string | null;
-  pending_orders: number | string | null;
-  paid_orders: number | string | null;
-  shipped_orders: number | string | null;
+  preparing_orders: number | string | null;
+  out_for_delivery_orders: number | string | null;
   completed_orders: number | string | null;
   cancelled_orders: number | string | null;
 };
@@ -51,9 +50,8 @@ export async function GET() {
         COUNT(*) AS total_orders,
         COALESCE(SUM(total), 0) AS revenue,
         COALESCE(AVG(total), 0) AS average_order_value,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_orders,
-        COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) AS paid_orders,
-        COALESCE(SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END), 0) AS shipped_orders,
+        COALESCE(SUM(CASE WHEN status = 'preparing' THEN 1 ELSE 0 END), 0) AS preparing_orders,
+        COALESCE(SUM(CASE WHEN status = 'out_for_delivery' THEN 1 ELSE 0 END), 0) AS out_for_delivery_orders,
         COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_orders,
         COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) AS cancelled_orders
       FROM orders
@@ -108,9 +106,8 @@ export async function GET() {
           totalOrders: toNumber(overview.total_orders),
           revenue: toNumber(overview.revenue),
           averageOrderValue: toNumber(overview.average_order_value),
-          pendingOrders: toNumber(overview.pending_orders),
-          paidOrders: toNumber(overview.paid_orders),
-          shippedOrders: toNumber(overview.shipped_orders),
+          preparingOrders: toNumber(overview.preparing_orders),
+          outForDeliveryOrders: toNumber(overview.out_for_delivery_orders),
           completedOrders: toNumber(overview.completed_orders),
           cancelledOrders: toNumber(overview.cancelled_orders),
           totalCustomers: toNumber(users.total_customers),

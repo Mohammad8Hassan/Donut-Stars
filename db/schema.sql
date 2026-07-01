@@ -188,8 +188,8 @@ CREATE TABLE orders (
 
   user_id BIGINT UNSIGNED NULL,
 
-  status ENUM('pending','paid','shipped','completed','cancelled')
-    DEFAULT 'pending',
+  status ENUM('preparing','out_for_delivery','completed','cancelled')
+    DEFAULT 'preparing',
 
   payment_status ENUM('pending','paid','failed','refunded')
     DEFAULT 'pending',
@@ -217,6 +217,8 @@ CREATE TABLE orders (
   shipped_at TIMESTAMP NULL,
   completed_at TIMESTAMP NULL,
   cancelled_at TIMESTAMP NULL,
+  ready_at DATETIME NULL,
+  delivery_due_at DATETIME NULL,
 
   CONSTRAINT fk_orders_user
     FOREIGN KEY (user_id)

@@ -14,15 +14,15 @@ import {
   Users,
 } from "lucide-react";
 import { authFetch } from "@/app/api/authFetch";
+import { ORDER_STATUSES, getStatusLabel, getStatusBadgeClasses } from "@/lib/orderStatus";
 
 // These types reflect the normalized admin API payloads, not raw database rows.
 type AdminStats = {
   totalOrders: number;
   revenue: number;
   averageOrderValue: number;
-  pendingOrders: number;
-  paidOrders: number;
-  shippedOrders: number;
+  preparingOrders: number;
+  outForDeliveryOrders: number;
   completedOrders: number;
   cancelledOrders: number;
   totalCustomers: number;
@@ -67,7 +67,7 @@ type DashboardResponse = {
   orders: AdminOrder[];
 };
 
-const statusOptions = ["pending", "paid", "shipped", "completed", "cancelled"];
+const statusOptions = ORDER_STATUSES;
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -83,30 +83,6 @@ function formatDateTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function toTitleCase(value: string) {
-  return value
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function getStatusBadgeClasses(status: string) {
-  switch (status) {
-    case "pending":
-      return "border-amber-200 bg-amber-50 text-amber-700";
-    case "paid":
-      return "border-sky-200 bg-sky-50 text-sky-700";
-    case "shipped":
-      return "border-violet-200 bg-violet-50 text-violet-700";
-    case "completed":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
-    case "cancelled":
-      return "border-rose-200 bg-rose-50 text-rose-700";
-    default:
-      return "border-zinc-200 bg-zinc-50 text-zinc-700";
-  }
 }
 
 async function loadDashboard(status: string): Promise<DashboardResponse> {
@@ -234,7 +210,7 @@ export default function AdminDashboard() {
         {
           label: "Orders",
           value: String(stats.totalOrders),
-          detail: `${stats.pendingOrders} waiting for action`,
+          detail: `${stats.preparingOrders} preparing now`,
           icon: <ShoppingBag className="h-5 w-5" />,
           accent: "bg-zinc-950",
         },
@@ -302,15 +278,15 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="bg-white p-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Pending fulfillment</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Preparing</p>
                 <p className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-                  {stats ? stats.pendingOrders : "--"}
+                  {stats ? stats.preparingOrders : "--"}
                 </p>
               </div>
               <div className="bg-white p-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Shipped</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Out for delivery</p>
                 <p className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-                  {stats ? stats.shippedOrders : "--"}
+                  {stats ? stats.outForDeliveryOrders : "--"}
                 </p>
               </div>
               <div className="bg-white p-6">
@@ -380,7 +356,7 @@ export default function AdminDashboard() {
                   <option value="">All statuses</option>
                   {statusOptions.map((status) => (
                     <option key={status} value={status}>
-                      {toTitleCase(status)}
+                      {getStatusLabel(status)}
                     </option>
                   ))}
                 </select>
@@ -435,7 +411,7 @@ export default function AdminDashboard() {
                           <span
                             className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}
                           >
-                            {toTitleCase(order.status)}
+                            {getStatusLabel(order.status)}
                           </span>
                         </div>
 
@@ -521,7 +497,9 @@ export default function AdminDashboard() {
                             <p>
                               Payment:{" "}
                               <span className="font-semibold text-zinc-950">
-                                {order.payment_method ? toTitleCase(order.payment_method) : "Not set"}
+                                {order.payment_method
+                                  ? order.payment_method.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+                                  : "Not set"}
                               </span>
                             </p>
                             <p>
@@ -550,7 +528,7 @@ export default function AdminDashboard() {
                             >
                               {statusOptions.map((status) => (
                                 <option key={status} value={status}>
-                                  {toTitleCase(status)}
+                                  {getStatusLabel(status)}
                                 </option>
                               ))}
                             </select>

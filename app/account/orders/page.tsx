@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { authFetch } from "@/app/api/authFetch";
 import { AccountCard, AccountSectionHeading } from "@/app/components/account/AccountUi";
+import { getStatusLabel, getStatusBadgeClasses } from "@/lib/orderStatus";
 
 type OrderItem = {
   id: number;
@@ -47,36 +48,9 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function toTitleCase(value: string) {
-  return value
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function getStatusBadgeClasses(status: string) {
-  switch (status) {
-    case "pending":
-      return "bg-amber-50 text-amber-700 border border-amber-200";
-    case "paid":
-      return "bg-sky-50 text-sky-700 border border-sky-200";
-    case "shipped":
-      return "bg-violet-50 text-violet-700 border border-violet-200";
-    case "completed":
-      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
-    case "cancelled":
-      return "bg-rose-50 text-rose-700 border border-rose-200";
-    default:
-      return "bg-gray-50 text-gray-700 border border-gray-200";
-  }
-}
-
 function formatPaymentMethod(method: string | null) {
-  if (!method) {
-    return null;
-  }
-
-  return toTitleCase(method);
+  if (!method) return null;
+  return method.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function formatCardDigits(last4: string | null) {
@@ -166,7 +140,7 @@ export default function OrdersPage() {
                     </div>
 
                     <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
-                      {toTitleCase(order.status)}
+                      {getStatusLabel(order.status)}
                     </span>
                   </div>
 

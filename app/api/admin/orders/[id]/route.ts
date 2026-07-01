@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { ORDER_STATUSES } from "@/lib/orderStatus";
 
-// Only statuses that already exist in the orders schema are accepted here.
-const allowedStatuses = new Set(["pending", "paid", "shipped", "completed", "cancelled"]);
+const allowedStatuses = new Set(ORDER_STATUSES);
 
-// When an order moves into an important lifecycle stage we stamp the corresponding
-// timestamp once, preserving the first moment that status was reached.
+// Milestone timestamps are stamped once on first entry into each status.
 const timestampFields: Record<string, string | null> = {
-  pending: null,
-  paid: "paid_at",
-  shipped: "shipped_at",
-  completed: "completed_at",
-  cancelled: "cancelled_at",
+  preparing:        null,
+  out_for_delivery: "shipped_at",
+  completed:        "completed_at",
+  cancelled:        "cancelled_at",
 };
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -38,15 +36,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     let query = "UPDATE orders SET status = ?";
     const values: Array<string | number> = [status];
 
-    // Promoting an order to paid should also keep payment_status aligned.
-    if (status === "paid") {
-      query += ", payment_status = 'paid'";
-    }
-
     // For milestone statuses we record the first time the order entered that stage.
     const timestampField = timestampFields[status];
     if (timestampField) {
       query += `, ${timestampField} = COALESCE(${timestampField}, NOW())`;
+    }
+
+    // When an admin manually promotes a COD order to preparing, schedule the
+    // advancement timestamps so the cron job can auto-advance it from here.
+    // A default of 10 min prep + 30 min delivery is used since we don't have item data here.
+    if (status === "preparing") {
+      query += ", ready_at = COALESCE(ready_at, DATE_ADD(NOW(), INTERVAL 10 MINUTE))";
+      query += ", delivery_due_at = COALESCE(delivery_due_at, DATE_ADD(NOW(), INTERVAL 40 MINUTE))";
     }
 
     // We intentionally perform a single targeted update rather than a read-then-write

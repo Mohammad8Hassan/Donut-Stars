@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { ORDER_STATUSES } from "@/lib/orderStatus";
 
 // These row shapes reflect the raw SQL result sets used to build the admin order feed.
 // Like the customer orders route, we normalize ids and numeric money values before responding.
@@ -59,7 +60,7 @@ export async function GET(req: Request) {
     // configurable result limit for the recent queue.
     const status = searchParams.get("status")?.trim().toLowerCase() ?? "";
     const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? "12"), 1), 100);
-    const allowedStatuses = new Set(["pending", "paid", "shipped", "completed", "cancelled"]);
+    const allowedStatuses = new Set(ORDER_STATUSES);
 
     const values: Array<string | number> = [];
     let whereClause = "";

@@ -33,6 +33,7 @@ type ProductRow = {
   id: number;
   capacity: number | null; // null means it's a regular donut, a number means it's a box
   category_name: string;   // "donuts" or "boxes" etc.
+  price: number;           // canonical price from DB — used server-side, never trusted from client
 };
 
 // A fully validated cart item ready to be written to the database.
@@ -148,7 +149,7 @@ async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
     const id = Number(item.id);
     const [rows]: any = await db.query(
       `
-      SELECT p.id, p.capacity, LOWER(TRIM(c.name)) AS category_name
+      SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
       FROM products p
       INNER JOIN categories c
         ON c.id = p.category_id
@@ -166,7 +167,7 @@ async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
   if (item.size === 3 || item.size === 6 || item.size === 12) {
     const [boxRows]: any = await db.query(
       `
-      SELECT p.id, p.capacity, LOWER(TRIM(c.name)) AS category_name
+      SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
       FROM products p
       INNER JOIN categories c
         ON c.id = p.category_id
@@ -183,7 +184,7 @@ async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
   if (fallbackName) {
     const [nameRows]: any = await db.query(
       `
-      SELECT p.id, p.capacity, LOWER(TRIM(c.name)) AS category_name
+      SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
       FROM products p
       INNER JOIN categories c
         ON c.id = p.category_id
@@ -511,24 +512,22 @@ export async function POST(req: Request) {
     // list. This also calculates the server-side subtotal.
     const resolvedItems: ResolvedOrderItem[] = [];
     let subtotal = 0;
+    let totalItemQuantity = 0;
+    let totalBoxQuantity = 0;
 
     for (const item of items) {
       const quantityRaw = toNumber(item.quantity);
-      const unitPriceRaw = toNumber(item.price);
 
       if (quantityRaw === null || quantityRaw <= 0) {
         return NextResponse.json({ error: "Invalid item quantity" }, { status: 400 });
       }
 
-      if (unitPriceRaw === null || unitPriceRaw < 0) {
-        return NextResponse.json({ error: "Invalid item price" }, { status: 400 });
-      }
-
       const quantity = quantityRaw;
-      const unitPrice = unitPriceRaw;
 
       // Resolve the product from the database (3 fallback strategies).
+      // The server-side price from the DB is used — the client-supplied price is ignored.
       const product = await resolveProductId(item);
+      const unitPrice = Number(product.price);
 
       // A product with a capacity is a box; without capacity it's a single donut.
       const isBox = product.capacity !== null;
@@ -574,6 +573,8 @@ export async function POST(req: Request) {
         });
       }
 
+      totalItemQuantity += quantity;
+      if (isBox) totalBoxQuantity += quantity;
       subtotal += unitPrice * quantity;
     }
 
@@ -583,10 +584,14 @@ export async function POST(req: Request) {
     const shipping = subtotal > 20 ? 0 : 2.5;
     const total = Number((subtotal + shipping).toFixed(2));
 
-    // Determine initial order/payment status from the payment method.
-    // Card payments are immediately "paid"; cash-on-delivery stays "pending".
+    // All orders start preparing immediately. Payment status tracks whether cash is owed.
     const effectivePaymentStatus = paymentMethod === "cash-on-delivery" ? "pending" : "paid";
-    const orderStatus = effectivePaymentStatus === "paid" ? "paid" : "pending";
+    const orderStatus = "preparing";
+
+    // Estimate preparation time: 5 min base + 1 min per item + 2 extra min per box.
+    const preparingMins = 0 + totalItemQuantity + totalBoxQuantity ;
+    // Delivery window is randomly 30 or 45 minutes after the order is ready.
+    const deliveryMins = Math.random() < 0.5 ? 2 : 3;
 
     // -----------------------------------------------------------------------
     // Database transaction
@@ -639,9 +644,16 @@ export async function POST(req: Request) {
           customer_note,
           subtotal,
           shipping,
-          total
+          total,
+          paid_at,
+          ready_at,
+          delivery_due_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          ${effectivePaymentStatus === "paid" ? "NOW()" : "NULL"},
+          DATE_ADD(NOW(), INTERVAL ${preparingMins} MINUTE),
+          DATE_ADD(NOW(), INTERVAL ${preparingMins + deliveryMins} MINUTE)
+        )
         `,
         [
           userId,

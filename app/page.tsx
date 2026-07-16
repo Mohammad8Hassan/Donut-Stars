@@ -10,6 +10,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import QuantitySelector from "./components/QuantitySelector";
 
 const highlightedDonuts = donutList.slice(0, 6);
 
@@ -32,15 +33,16 @@ export default function Home() {
           <div className="relative flex min-h-[72vh] max-w-3xl flex-col justify-center px-6 py-10 text-white sm:px-8 lg:px-12">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-200 backdrop-blur-md">
               <Sparkles className="h-4 w-4" />
-              Fresh daily, styled to match the app
+              Baked fresh every morning
             </div>
 
             <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl lg:text-7xl">
-              Big visuals, softer polish, and donuts that still lead the page.
+              Handcrafted donuts, made fresh and delivered warm.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
-              A cleaner landing page with wider sections, warmer gradients, and
-              room for the photography to do more of the work.
+              From classic glazed to our seasonal specials, every donut is
+              made from scratch each morning using real butter, real fruit,
+              and no shortcuts.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -52,7 +54,7 @@ export default function Home() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <p className="text-sm font-medium text-white/70">
-                Build 3, 6, or 12 packs with your favorite lineup.
+                Mix and match your favorites in a 3, 6, or 12 pack.
               </p>
             </div>
           </div>
@@ -67,13 +69,22 @@ export default function Home() {
                 Top picks
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">
-                The carousel stays, but the section breathes more now.
+                Customer favorites, fresh out of the case.
               </h2>
               <p className="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
-                Same interaction idea, just restyled with the rounded card language
-                from the rest of the app and given more room on the page.
+                These are the donuts our regulars keep coming back for, from
+                the classics to a few flavors that only stick around for a
+                season.
               </p>
             </div>
+
+            <Link
+              href="/buy?tab=donuts"
+              className="inline-flex h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
+            >
+              View full menu
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
           <div className="mt-8 px-10 sm:px-12">
@@ -84,8 +95,8 @@ export default function Home() {
                     key={donut.id}
                     className="pl-3 md:basis-1/2 xl:basis-1/3"
                   >
-                    <article className="group relative h-full overflow-hidden rounded-[32px] border border-zinc-100 bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:border-rose-200 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
-                      <div className="absolute inset-x-6 top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.16),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" />
+                    <article className="group relative flex h-full flex-col rounded-[32px] border bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 transition duration-200 border-rose-200 ">
+                      {/* <div className="absolute inset-x-6 top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.16),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" /> */}
 
                       <div className="relative flex items-center justify-between gap-3">
                         <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500 transition duration-300 group-hover:border-rose-300 group-hover:bg-white">
@@ -93,7 +104,7 @@ export default function Home() {
                         </span>
                       </div>
 
-                      <div className="relative mt-4 h-64 rounded-[30px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_58%)] transition duration-300 group-hover:bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.18),transparent_62%)] sm:h-72">
+                      <div className="relative mt-4 h-64 overflow-hidden rounded-[30px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_58%)] transition duration-300 group-hover:bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.18),transparent_62%)] sm:h-72">
                         <Image
                           src={`/${donut.image}`}
                           alt={donut.name}
@@ -105,9 +116,13 @@ export default function Home() {
                       <h3 className="mt-4 text-xl font-black tracking-tight text-zinc-950 transition duration-300 group-hover:text-rose-600">
                         {donut.name}
                       </h3>
-                      <p className="mt-3 text-sm leading-6 text-zinc-600">
+                      <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-zinc-600">
                         {donut.discription}
                       </p>
+
+                      <div className="mt-4 rounded-[22px] border border-zinc-200 bg-zinc-50 p-1.5 shadow-inner">
+                        <QuantitySelector item={donut} />
+                      </div>
                     </article>
                   </CarouselItem>
                 ))}
@@ -128,16 +143,26 @@ export default function Home() {
                 Custom boxes
               </div>
               <h2 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
-                One wide section. One clear message. Build the box you want.
+                Build a box that's exactly what your table wants.
               </h2>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
-                Choose a 3, 6, or 12 pack and fill it with the donuts you actually
-                want. This section now leans on a larger image and a simpler message
-                instead of splitting into multiple competing blocks.
+                Pick a size, then fill it with whatever mix you're craving.
+                Great for the office, a birthday, or just a Friday that
+                deserves donuts.
               </p>
               <div className="mt-8 rounded-[28px] border border-zinc-100 bg-[linear-gradient(135deg,#fff7f5,#fffdf7)] p-5 text-sm font-semibold text-zinc-700 shadow-sm">
-                Simple flow: pick a box size, choose your donuts, review the cart,
-                and checkout.
+                Pick a box size, choose your donuts, review your cart, and
+                check out.
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  href="/buy?tab=boxes"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
+                >
+                  Build a box
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
 
@@ -172,12 +197,12 @@ export default function Home() {
                 Drinks and occasions
               </div>
               <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
-                Add a drink, bring a box, and make it feel like an event.
+                Add a drink, bring a box, make it an occasion.
               </h2>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-                A couple of drinks are enough to support the order, and the larger
-                imagery helps the page feel more like a landing experience instead
-                of a list of small components.
+                Pair your box with a hot or iced coffee and you've got
+                breakfast, a birthday, or an office treat covered in one
+                order.
               </p>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -190,6 +215,16 @@ export default function Home() {
                     <p className="mt-1 text-sm text-white/60">{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(drink.price)}</p>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  href="/buy?tab=drinks"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100"
+                >
+                  Shop drinks
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
@@ -204,11 +239,11 @@ export default function Home() {
                 Ready when you are
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
-                Start an order that feels a little more special.
+                Your box is one order away.
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
-                Wider sections, bigger imagery, cleaner structure, and the carousel
-                still right where it should be.
+                Pick your favorites, add a drink if you're feeling it, and
+                we'll have it ready fresh for pickup or delivery.
               </p>
 
               <div className="mt-8">

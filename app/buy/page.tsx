@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Donut, LoaderCircle, PackageOpen, RefreshCcw, CupSoda } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BoxBuilder from '../components/BoxBuilder'
@@ -36,7 +37,9 @@ const tabMeta = [
   },
 ] as const
 
-export default function Buy() {
+function BuyContent() {
+  const searchParams = useSearchParams()
+
   const [menu, setMenu] = useState<MenuResponse>({
     donuts: [],
     drinks: [],
@@ -44,7 +47,12 @@ export default function Buy() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<(typeof tabMeta)[number]['value']>('donuts')
+  const [activeTab, setActiveTab] = useState<(typeof tabMeta)[number]['value']>(() => {
+    const requestedTab = searchParams.get('tab')
+    return tabMeta.some(tab => tab.value === requestedTab)
+      ? (requestedTab as (typeof tabMeta)[number]['value'])
+      : 'donuts'
+  })
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
   const [builderMode, setBuilderMode] = useState<'build' | 'remove' | 'edit'>('build')
@@ -245,5 +253,13 @@ export default function Buy() {
         </div>
       </section>
     </main>
+  )
+}
+
+export default function Buy() {
+  return (
+    <Suspense fallback={null}>
+      <BuyContent />
+    </Suspense>
   )
 }

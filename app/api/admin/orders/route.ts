@@ -60,7 +60,7 @@ export async function GET(req: Request) {
     // configurable result limit for the recent queue.
     const status = searchParams.get("status")?.trim().toLowerCase() ?? "";
     const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? "12"), 1), 100);
-    const allowedStatuses = new Set(ORDER_STATUSES);
+    const allowedStatuses = new Set<string>(ORDER_STATUSES);
 
     const values: Array<string | number> = [];
     let whereClause = "";

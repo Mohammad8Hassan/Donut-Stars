@@ -9,7 +9,11 @@ const navItems = [
   },
   {
     name: "Account",
-    url: "/account"     
+    url: "/account"
+  },
+  {
+    name: "Track Order",
+    url: "/track"
   }
 ]
   

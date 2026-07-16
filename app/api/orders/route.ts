@@ -55,6 +55,25 @@ type AddressRow = {
   country: string;
 };
 
+// Address typed directly by a guest at checkout (not a saved `addresses` row).
+// Column max lengths mirror the `orders.shipping_*` columns in db/schema.sql.
+function resolveGuestAddress(raw: unknown): AddressRow | null {
+  const source = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+
+  const full_name = toOptionalString(source.full_name, 100);
+  const phone = toOptionalString(source.phone, 30);
+  const line1 = toOptionalString(source.line1, 255);
+  const city = toOptionalString(source.city, 100);
+  const country = toOptionalString(source.country, 100);
+  const postal_code = toOptionalString(source.postal_code, 20);
+
+  if (!full_name || !phone || !line1 || !city || !country) {
+    return null;
+  }
+
+  return { full_name, phone, line1, city, postal_code, country };
+}
+
 // Row shape from the orders table (used when listing a customer's past orders).
 type OrderListRow = {
   id: number | string;
@@ -445,20 +464,13 @@ export async function GET() {
 // ---------------------------------------------------------------------------
 export async function POST(req: Request) {
   try {
+    // Guest checkout is allowed: getSession() returning null just means
+    // orders.user_id will be stored as NULL (the column is nullable for this reason).
     const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = session ? Number(session.user.id) : null;
 
-    const userId = Number(session.user.id);
     const body = await req.json();
-    const addressId = Number(body?.addressId);
     const items = (body?.items ?? []) as IncomingCartItem[];
-
-    // Basic validation before touching the database.
-    if (!Number.isInteger(addressId) || addressId <= 0) {
-      return NextResponse.json({ error: "Invalid address id" }, { status: 400 });
-    }
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -488,25 +500,43 @@ export async function POST(req: Request) {
     const paymentMetaValue = paymentMetadata === null ? null : JSON.stringify(paymentMetadata);
     const customerNote = toOptionalString(paymentInput.customerNote ?? paymentInput.note);
 
-    // Verify the address belongs to this user before using it for shipping.
-    // This prevents a customer from shipping to someone else's saved address.
-    // db.query() borrows any free connection from the pool, runs the query,
-    // then immediately returns that connection for other requests to use.
-    const [addressRows]: any = await db.query(
-      `
-      SELECT full_name, phone, line1, city, postal_code, country
-      FROM addresses
-      WHERE id = ? AND user_id = ?
-      LIMIT 1
-      `,
-      [addressId, userId]
-    );
+    // Logged-in customers pick a saved address by id; guests type one in at
+    // checkout, so we validate/sanitize it directly instead of trusting a DB row.
+    let shippingAddress: AddressRow;
 
-    if (!addressRows.length) {
-      return NextResponse.json({ error: "Address not found" }, { status: 404 });
+    if (userId !== null && body?.addressId !== undefined && body?.addressId !== null) {
+      const addressId = Number(body.addressId);
+
+      if (!Number.isInteger(addressId) || addressId <= 0) {
+        return NextResponse.json({ error: "Invalid address id" }, { status: 400 });
+      }
+
+      // Verify the address belongs to this user before using it for shipping.
+      // This prevents a customer from shipping to someone else's saved address.
+      const [addressRows]: any = await db.query(
+        `
+        SELECT full_name, phone, line1, city, postal_code, country
+        FROM addresses
+        WHERE id = ? AND user_id = ?
+        LIMIT 1
+        `,
+        [addressId, userId]
+      );
+
+      if (!addressRows.length) {
+        return NextResponse.json({ error: "Address not found" }, { status: 404 });
+      }
+
+      shippingAddress = addressRows[0] as AddressRow;
+    } else {
+      const guestAddress = resolveGuestAddress(body?.address);
+
+      if (!guestAddress) {
+        return NextResponse.json({ error: "Missing or invalid delivery address" }, { status: 400 });
+      }
+
+      shippingAddress = guestAddress;
     }
-
-    const shippingAddress = addressRows[0] as AddressRow;
 
     // Validate every cart item against the database and build the resolvedItems
     // list. This also calculates the server-side subtotal.
@@ -589,9 +619,9 @@ export async function POST(req: Request) {
     const orderStatus = "preparing";
 
     // Estimate preparation time: 5 min base + 1 min per item + 2 extra min per box.
-    const preparingMins = 0 + totalItemQuantity + totalBoxQuantity ;
+    const preparingMins = 1 ;
     // Delivery window is randomly 30 or 45 minutes after the order is ready.
-    const deliveryMins = Math.random() < 0.5 ? 2 : 3;
+    const deliveryMins = 2;
 
     // -----------------------------------------------------------------------
     // Database transaction

@@ -14,6 +14,7 @@ cron.schedule("* * * * *", async () => {
   try {
     const res = await fetch(`${BASE_URL}/api/cron/update-orders`, {
       headers: { Authorization: `Bearer ${CRON_SECRET}` },
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();

@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { CreditCard, MapPin, Receipt } from "lucide-react";
 
 import { authFetch } from "@/app/api/authFetch";
+import { useAuth } from "@/app/context/useAuth";
 import { useAppSelector } from "../store/hooks";
 import { clearCart, selectCartItems, selectCartTotal } from "../store/cartSlice";
 
@@ -27,6 +28,24 @@ type PaymentState = {
   cvc: string;
   paymentMethod: string;
 };
+
+type GuestAddressState = {
+  full_name: string;
+  phone: string;
+  line1: string;
+  city: string;
+  postal_code: string;
+  country: string;
+};
+
+const emptyGuestAddress = (): GuestAddressState => ({
+  full_name: "",
+  phone: "",
+  line1: "",
+  city: "",
+  postal_code: "",
+  country: "",
+});
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -50,6 +69,8 @@ const formatCvc = (value: string) => value.replace(/\D/g, "").slice(0, 4);
 
 export default function PaymentPage(): JSX.Element {
   const dispatch = useDispatch();
+  const { user, checked } = useAuth();
+  const isGuest = checked && !user;
   const cartItems = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartTotal);
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -68,10 +89,18 @@ export default function PaymentPage(): JSX.Element {
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
+  const [guestAddress, setGuestAddress] = useState<GuestAddressState>(emptyGuestAddress());
+  const [guestAddressErrors, setGuestAddressErrors] = useState<Partial<Record<keyof GuestAddressState, string>>>({});
+
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [placedOrderId, setPlacedOrderId] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof PaymentState, string>>>({});
+
+  function updateGuestAddress<K extends keyof GuestAddressState>(key: K, value: GuestAddressState[K]) {
+    setGuestAddress((p) => ({ ...p, [key]: value }));
+  }
 
   function update<K extends keyof PaymentState>(key: K, value: PaymentState[K]) {
     setForm((p) => ({ ...p, [key]: value }));
@@ -111,8 +140,15 @@ export default function PaymentPage(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    if (!checked) return;
+
+    if (isGuest) {
+      setLoadingAddresses(false);
+      return;
+    }
+
     loadAddresses();
-  }, [loadAddresses]);
+  }, [checked, isGuest, loadAddresses]);
 
   useEffect(() => {
     if (form.paymentMethod === "cash-on-delivery") {
@@ -154,12 +190,32 @@ export default function PaymentPage(): JSX.Element {
     return `Pay ${formatCurrency(total)}`;
   }, [form.paymentMethod, processing, success, total]);
 
+  function validateGuestAddress(): Partial<Record<keyof GuestAddressState, string>> {
+    const errors: Partial<Record<keyof GuestAddressState, string>> = {};
+
+    if (!guestAddress.full_name.trim()) errors.full_name = "Enter your full name.";
+    if (!guestAddress.phone.trim()) errors.phone = "Enter a phone number.";
+    if (!guestAddress.line1.trim()) errors.line1 = "Enter your street address.";
+    if (!guestAddress.city.trim()) errors.city = "Enter your city.";
+    if (!guestAddress.country.trim()) errors.country = "Enter your country.";
+
+    return errors;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!selectedAddressId) {
+    if (isGuest) {
+      const addressErrors = validateGuestAddress();
+      if (Object.keys(addressErrors).length > 0) {
+        setGuestAddressErrors(addressErrors);
+        setError("Please fill in your delivery address.");
+        return;
+      }
+      setGuestAddressErrors({});
+    } else if (!selectedAddressId) {
       setError("Please choose a delivery address.");
       return;
     }
@@ -185,7 +241,18 @@ export default function PaymentPage(): JSX.Element {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          addressId: selectedAddressId,
+          ...(isGuest
+            ? {
+                address: {
+                  full_name: guestAddress.full_name.trim(),
+                  phone: guestAddress.phone.trim(),
+                  line1: guestAddress.line1.trim(),
+                  city: guestAddress.city.trim(),
+                  postal_code: guestAddress.postal_code.trim() || null,
+                  country: guestAddress.country.trim(),
+                },
+              }
+            : { addressId: selectedAddressId }),
           items: cartItems,
           payment: {
             method: form.paymentMethod,
@@ -207,6 +274,7 @@ export default function PaymentPage(): JSX.Element {
 
       const data = await res.json();
       setSuccess(`Order #${data.orderId} placed successfully.`);
+      setPlacedOrderId(data.orderId ?? null);
       dispatch(clearCart());
     } catch (err: any) {
       console.error("Order placement error:", err);
@@ -247,62 +315,146 @@ export default function PaymentPage(): JSX.Element {
                     <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">Choose your address</h2>
                   </div>
                 </div>
-                <Link
-                  href="/account/addresses"
-                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50"
-                >
-                  Manage Addresses
-                </Link>
+                {!isGuest && (
+                  <Link
+                    href="/account/addresses"
+                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50"
+                  >
+                    Manage Addresses
+                  </Link>
+                )}
               </div>
 
-              {loadingAddresses && <p className="mt-5 text-sm text-zinc-500">Loading addresses...</p>}
+              {isGuest ? (
+                <div className="mt-5">
+                  <p className="text-sm text-zinc-600">
+                    Checking out as a guest. Enter your delivery details below, or{" "}
+                    <Link href="/login" className="font-semibold text-rose-600 underline">
+                      log in
+                    </Link>{" "}
+                    to use a saved address.
+                  </p>
 
-              {!loadingAddresses && addresses.length === 0 && (
-                <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
-                  No saved addresses found. Add one before placing your order.
-                </div>
-              )}
-
-              {!loadingAddresses && addresses.length > 0 && (
-                <div className="mt-5 grid gap-3">
-                  {addresses.map((addr) => (
-                    <label
-                      key={addr.id}
-                      className={`cursor-pointer rounded-[28px] border p-4 transition ${
-                        selectedAddressId === addr.id
-                          ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
-                          : "border-zinc-200 bg-white hover:border-rose-200"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
+                  <div className="mt-4 grid gap-4 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Full Name</span>
                         <input
-                          type="radio"
-                          name="selectedAddress"
-                          checked={selectedAddressId === addr.id}
-                          onChange={() => setSelectedAddressId(addr.id)}
-                          className="mt-1 h-4 w-4 accent-rose-500"
+                          value={guestAddress.full_name}
+                          onChange={(e) => updateGuestAddress("full_name", e.target.value)}
+                          placeholder="Full name"
+                          className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${guestAddressErrors.full_name ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
                         />
-                        <div className="text-sm text-zinc-600">
-                          <p className="font-semibold text-zinc-950">
-                            {addr.label ?? "Address"}
-                            {isDefaultAddress(addr.is_default) && (
-                              <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-rose-600">
-                                Default
-                              </span>
-                            )}
-                          </p>
-                          <p className="mt-1">{addr.full_name}</p>
-                          <p>{addr.phone}</p>
-                          <p>
-                            {addr.line1}, {addr.city}
-                          </p>
-                          {addr.postal_code && <p>{addr.postal_code}</p>}
-                          <p>{addr.country}</p>
-                        </div>
-                      </div>
+                        {guestAddressErrors.full_name && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.full_name}</p>}
+                      </label>
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Phone</span>
+                        <input
+                          value={guestAddress.phone}
+                          onChange={(e) => updateGuestAddress("phone", e.target.value)}
+                          placeholder="Phone number"
+                          className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${guestAddressErrors.phone ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        />
+                        {guestAddressErrors.phone && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.phone}</p>}
+                      </label>
+                    </div>
+
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Address Line</span>
+                      <input
+                        value={guestAddress.line1}
+                        onChange={(e) => updateGuestAddress("line1", e.target.value)}
+                        placeholder="Street, building, unit..."
+                        className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${guestAddressErrors.line1 ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                      />
+                      {guestAddressErrors.line1 && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.line1}</p>}
                     </label>
-                  ))}
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-semibold text-zinc-700">City</span>
+                        <input
+                          value={guestAddress.city}
+                          onChange={(e) => updateGuestAddress("city", e.target.value)}
+                          placeholder="City"
+                          className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${guestAddressErrors.city ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        />
+                        {guestAddressErrors.city && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.city}</p>}
+                      </label>
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Postal Code</span>
+                        <input
+                          value={guestAddress.postal_code}
+                          onChange={(e) => updateGuestAddress("postal_code", e.target.value)}
+                          placeholder="Postal code"
+                          className="w-full rounded-2xl border border-zinc-300 px-4 py-3 text-zinc-900 outline-none transition focus:border-rose-300"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Country</span>
+                        <input
+                          value={guestAddress.country}
+                          onChange={(e) => updateGuestAddress("country", e.target.value)}
+                          placeholder="Country"
+                          className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${guestAddressErrors.country ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        />
+                        {guestAddressErrors.country && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.country}</p>}
+                      </label>
+                    </div>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {loadingAddresses && <p className="mt-5 text-sm text-zinc-500">Loading addresses...</p>}
+
+                  {!loadingAddresses && addresses.length === 0 && (
+                    <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                      No saved addresses found. Add one before placing your order.
+                    </div>
+                  )}
+
+                  {!loadingAddresses && addresses.length > 0 && (
+                    <div className="mt-5 grid gap-3">
+                      {addresses.map((addr) => (
+                        <label
+                          key={addr.id}
+                          className={`cursor-pointer rounded-[28px] border p-4 transition ${
+                            selectedAddressId === addr.id
+                              ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
+                              : "border-zinc-200 bg-white hover:border-rose-200"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="radio"
+                              name="selectedAddress"
+                              checked={selectedAddressId === addr.id}
+                              onChange={() => setSelectedAddressId(addr.id)}
+                              className="mt-1 h-4 w-4 accent-rose-500"
+                            />
+                            <div className="text-sm text-zinc-600">
+                              <p className="font-semibold text-zinc-950">
+                                {addr.label ?? "Address"}
+                                {isDefaultAddress(addr.is_default) && (
+                                  <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-rose-600">
+                                    Default
+                                  </span>
+                                )}
+                              </p>
+                              <p className="mt-1">{addr.full_name}</p>
+                              <p>{addr.phone}</p>
+                              <p>
+                                {addr.line1}, {addr.city}
+                              </p>
+                              {addr.postal_code && <p>{addr.postal_code}</p>}
+                              <p>{addr.country}</p>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </section>
 
@@ -390,11 +542,30 @@ export default function PaymentPage(): JSX.Element {
               )}
 
               {error && <div className="mt-5 rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-              {success && <div className="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
+              {success && (
+                <div className="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {success}
+                  {isGuest && placedOrderId && (
+                    <>
+                      {" "}
+                      <Link href={`/track?orderId=${placedOrderId}`} className="font-semibold underline">
+                        Track this order
+                      </Link>
+                      .
+                    </>
+                  )}
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={processing || cartItems.length === 0 || loadingAddresses || !selectedAddressId || !!success}
+                disabled={
+                  processing ||
+                  cartItems.length === 0 ||
+                  loadingAddresses ||
+                  (!isGuest && !selectedAddressId) ||
+                  !!success
+                }
                 className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {payButtonLabel}

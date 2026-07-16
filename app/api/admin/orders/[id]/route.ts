@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 import { ORDER_STATUSES } from "@/lib/orderStatus";
 
-const allowedStatuses = new Set(ORDER_STATUSES);
+const allowedStatuses = new Set<string>(ORDER_STATUSES);
 
 // Milestone timestamps are stamped once on first entry into each status.
 const timestampFields: Record<string, string | null> = {

@@ -29,7 +29,6 @@ import {
   type FetchArgs,
   type FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import type { OrderStatus } from "@/lib/orderStatus";
 
 // ---------------------------------------------------------------------------
 // Response types
@@ -81,11 +80,6 @@ export type AccountOrder = TrackedOrder & {
 // required because the API route treats them as a shared secret
 // (WHERE id = ? AND shipping_phone = ?), see app/api/orders/track/route.ts.
 export type TrackOrderArgs = { orderId: string; phone: string };
-
-// Statuses that mean "this order is done moving" (see lib/orderStatus.ts for
-// the full enum). Used below to filter the active-orders list, and by the
-// track page to know when it can stop polling.
-const TERMINAL_STATUSES = new Set<OrderStatus>(["completed", "cancelled"]);
 
 // ---------------------------------------------------------------------------
 // Base query
@@ -196,28 +190,30 @@ export const orderApi = createApi({
     }),
 
     // -------------------------------------------------------------------
-    // getActiveOrders — GET /api/orders
+    // getActiveOrders — GET /api/orders/active
     //
     // Used by the logged-in account "active orders" page
-    // (app/account/active-orders/page.tsx). This is the same endpoint
-    // app/account/orders/page.tsx (order *history*) already calls — it's
-    // session-gated (reads the accessToken cookie server-side via
-    // getSession()) and returns every order for that user, newest first.
-    //
-    // There's no separate "active orders" API route; instead this endpoint
-    // reuses GET /api/orders and filters client-side down to orders that
-    // aren't finished yet. `void` as the arg type means the hook takes no
+    // (app/account/active-orders/page.tsx). Session-gated (reads the
+    // accessToken cookie server-side via getSession()) — the server figures
+    // out *which* user's orders to return from the cookie, so no params are
+    // needed here. `void` as the arg type means the hook takes no
     // arguments: `useGetActiveOrdersQuery()`.
+    //
+    // Unlike app/account/orders/page.tsx (order *history*, which hits plain
+    // GET /api/orders and wants everything), this hits a dedicated route
+    // that filters to non-completed/non-cancelled orders in SQL
+    // (lib/orders.ts, fetchOrderHistory(userId, { activeOnly: true })).
+    // Doing the filtering server-side — instead of fetching the customer's
+    // entire order history here and discarding the finished ones in
+    // transformResponse — matters because this query polls on an interval:
+    // filtering client-side would mean re-transferring and re-parsing the
+    // full history (which only grows over time) on every single poll.
     // -------------------------------------------------------------------
     getActiveOrders: builder.query<AccountOrder[], void>({
-      // No params needed — the server figures out *which* user's orders to
-      // return from the session cookie, not from anything we send here.
-      query: () => "orders",
-      // The route responds with { orders: [...] } containing the user's
-      // FULL history. Filter out anything already completed/cancelled so
-      // this hook's `data` is just the orders still in flight.
-      transformResponse: (response: { orders: AccountOrder[] }) =>
-        response.orders.filter((order) => !TERMINAL_STATUSES.has(order.status as OrderStatus)),
+      query: () => "orders/active",
+      // The route responds with { orders: [...] }; unwrap it the same way
+      // trackOrder unwraps { order: {...} } above.
+      transformResponse: (response: { orders: AccountOrder[] }) => response.orders,
     }),
   }),
 });

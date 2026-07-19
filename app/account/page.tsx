@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Lock, MapPin, PackageCheck, UserRound } from "lucide-react";
+import { ArrowRight, Lock, MapPin, PackageCheck, Truck, UserRound } from "lucide-react";
 import { AccountCard, AccountSectionHeading } from "../components/account/AccountUi";
 import { useAuth } from "../context/useAuth";
 
@@ -13,6 +13,12 @@ export default function AccountPage() {
       subtitle: "Name, email, and profile preferences",
       href: "/account/details",
       icon: <UserRound className="h-5 w-5" />,
+    },
+    {
+      title: "Active Orders",
+      subtitle: "Live status of orders in progress",
+      href: "/account/active-orders",
+      icon: <Truck className="h-5 w-5" />,
     },
     {
       title: "Previous Orders",

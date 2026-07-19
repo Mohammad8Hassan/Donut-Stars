@@ -1,34 +1,27 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ShieldCheck } from "lucide-react";
+import { skipToken } from "@reduxjs/toolkit/query/react";
 import { getStatusBadgeClasses, getStatusLabel } from "@/lib/orderStatus";
+import { useTrackOrderQuery, type TrackOrderArgs } from "@/app/store/orderApi";
 
-type OrderItem = {
-  id: number;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  capacity: number | null;
-  boxContents: Array<{ name: string; quantity: number }>;
-};
+// How often to re-poll a tracked order while it's still in flight. The cron
+// worker only advances statuses once a minute, so this just needs to be
+// frequent enough to feel live without hammering the endpoint.
+const POLL_INTERVAL_MS = 15000;
+const TERMINAL_STATUSES = new Set(["completed", "cancelled"]);
 
-type TrackedOrder = {
-  id: number;
-  status: string;
-  shipping_name: string;
-  shipping_phone: string | null;
-  shipping_line1: string;
-  shipping_city: string;
-  shipping_postal_code: string | null;
-  shipping_country: string;
-  subtotal: number;
-  shipping: number;
-  total: number;
-  created_at: string;
-  items: OrderItem[];
-};
+function getErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "data" in error) {
+    const data = (error as { data?: unknown }).data;
+    if (data && typeof data === "object" && "error" in data && typeof (data as any).error === "string") {
+      return (data as any).error;
+    }
+  }
+  return "Failed to find that order.";
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
@@ -43,38 +36,49 @@ function TrackOrderForm() {
 
   const [orderId, setOrderId] = useState(searchParams.get("orderId") ?? "");
   const [phone, setPhone] = useState("");
-  const [order, setOrder] = useState<TrackedOrder | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submittedArgs, setSubmittedArgs] = useState<TrackOrderArgs | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState(0);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const {
+    data: order,
+    error: queryError,
+    isLoading,
+    isFetching,
+  } = useTrackOrderQuery(submittedArgs ?? skipToken, { pollingInterval });
+
+  // Keep polling while the order is still moving, stop once it hits a
+  // terminal status (or the lookup failed) so we're not polling forever.
+  useEffect(() => {
+    if (!submittedArgs || queryError) {
+      setPollingInterval(0);
+      return;
+    }
+    if (order && TERMINAL_STATUSES.has(order.status)) {
+      setPollingInterval(0);
+      return;
+    }
+    setPollingInterval(POLL_INTERVAL_MS);
+  }, [submittedArgs, order?.status, queryError]);
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setOrder(null);
 
-    if (!orderId.trim() || !phone.trim()) {
-      setError("Enter both your order number and phone.");
+    const trimmedOrderId = orderId.trim();
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedOrderId || !trimmedPhone) {
+      setFormError("Enter both your order number and phone.");
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const params = new URLSearchParams({ orderId: orderId.trim(), phone: phone.trim() });
-      const res = await fetch(`/api/orders/track?${params.toString()}`, { cache: "no-store" });
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(data?.error ?? "Failed to find that order.");
-      }
-
-      setOrder(data.order);
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to find that order.");
-    } finally {
-      setLoading(false);
-    }
+    setFormError(null);
+    setSubmittedArgs({ orderId: trimmedOrderId, phone: trimmedPhone });
   }
+
+  const loading = submittedArgs ? isLoading : false;
+  const error = formError ?? (submittedArgs && queryError ? getErrorMessage(queryError) : null);
+  const isLive = Boolean(submittedArgs && order && !TERMINAL_STATUSES.has(order.status) && !queryError);
 
   const addressParts = order
     ? [order.shipping_line1, order.shipping_city, order.shipping_postal_code, order.shipping_country].filter(Boolean).join(", ")
@@ -136,9 +140,17 @@ function TrackOrderForm() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Order #{order.id}</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">Placed {formatDate(order.created_at)}</h2>
               </div>
-              <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
-                {getStatusLabel(order.status)}
-              </span>
+              <div className="flex flex-col items-end gap-2">
+                <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
+                  {getStatusLabel(order.status)}
+                </span>
+                {isLive && (
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500">
+                    <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${isFetching ? "animate-pulse" : ""}`} />
+                    Live — updates automatically
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="mt-5 rounded-[24px] border border-zinc-200 bg-zinc-50/70 p-5">

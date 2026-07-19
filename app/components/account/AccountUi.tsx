@@ -9,6 +9,7 @@ import {
   MapPin,
   PackageCheck,
   Settings2,
+  Truck,
   UserRound,
 } from "lucide-react";
 import { useAuth } from "@/app/context/useAuth";
@@ -26,6 +27,12 @@ const accountNavItems: AccountNavItem[] = [
     label: "Details",
     description: "Name, email, and profile info",
     icon: <UserRound className="h-4 w-4" />,
+  },
+  {
+    href: "/account/active-orders",
+    label: "Active Orders",
+    description: "Live status of orders in progress",
+    icon: <Truck className="h-4 w-4" />,
   },
   {
     href: "/account/orders",

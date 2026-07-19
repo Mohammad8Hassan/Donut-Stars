@@ -619,9 +619,9 @@ export async function POST(req: Request) {
     const orderStatus = "preparing";
 
     // Estimate preparation time: 5 min base + 1 min per item + 2 extra min per box.
-    const preparingMins = 1 ;
+    const preparingMins = 0.5 ;
     // Delivery window is randomly 30 or 45 minutes after the order is ready.
-    const deliveryMins = 2;
+    const deliveryMins = 1;
 
     // -----------------------------------------------------------------------
     // Database transaction

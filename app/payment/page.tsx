@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { CreditCard, MapPin, Receipt } from "lucide-react";
 
 import { authFetch } from "@/app/api/authFetch";
 import { useAuth } from "@/app/context/useAuth";
 import { addGuestOrder } from "@/lib/guestOrders";
+import { PageLoader } from "@/app/components/PageLoader";
 import { useAppSelector } from "../store/hooks";
 import { clearCart, selectCartItems, selectCartTotal } from "../store/cartSlice";
 import { orderApi } from "../store/orderApi";
@@ -71,6 +73,7 @@ const formatCvc = (value: string) => value.replace(/\D/g, "").slice(0, 4);
 
 export default function PaymentPage(): JSX.Element {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { user, checked } = useAuth();
   const isGuest = checked && !user;
   const cartItems = useAppSelector(selectCartItems);
@@ -99,6 +102,8 @@ export default function PaymentPage(): JSX.Element {
   const [success, setSuccess] = useState<string | null>(null);
   const [placedOrderId, setPlacedOrderId] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof PaymentState, string>>>({});
+
+  const orderPlacedRef = useRef(false);
 
   function updateGuestAddress<K extends keyof GuestAddressState>(key: K, value: GuestAddressState[K]) {
     setGuestAddress((p) => ({ ...p, [key]: value }));
@@ -151,6 +156,14 @@ export default function PaymentPage(): JSX.Element {
 
     loadAddresses();
   }, [checked, isGuest, loadAddresses]);
+
+  useEffect(() => {
+    if (!checked || orderPlacedRef.current) return;
+
+    if (cartItems.length === 0) {
+      router.replace("/checkout");
+    }
+  }, [checked, cartItems.length, router]);
 
   useEffect(() => {
     if (form.paymentMethod === "cash-on-delivery") {
@@ -275,6 +288,7 @@ export default function PaymentPage(): JSX.Element {
       }
 
       const data = await res.json();
+      orderPlacedRef.current = true;
       setSuccess(`Order #${data.orderId} placed successfully.`);
       setPlacedOrderId(data.orderId ?? null);
 
@@ -287,6 +301,7 @@ export default function PaymentPage(): JSX.Element {
       }
 
       dispatch(clearCart());
+      isGuest ? router.replace("/") : router.replace("/account/active-orders");
     } catch (err: any) {
       console.error("Order placement error:", err);
       setError(err?.message ?? "Something went wrong.");
@@ -295,10 +310,22 @@ export default function PaymentPage(): JSX.Element {
     }
   }
 
+  if (!checked || (cartItems.length === 0 && !orderPlacedRef.current)) {
+    return (
+      <main className="relative isolate overflow-hidden">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
+            <PageLoader title="Preparing checkout" message="Hang tight while we get things ready." />
+          </section>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="relative isolate overflow-hidden">
-      
-      
+
+
 
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">

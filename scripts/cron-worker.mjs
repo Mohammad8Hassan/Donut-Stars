@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import { CronJob } from "cron";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
@@ -10,24 +10,29 @@ if (!CRON_SECRET) {
 
 console.log(`[cron] Order advancement worker started → ${BASE_URL}/api/cron/update-orders`);
 
-cron.schedule("* * * * *", async () => {
-  try {
-    const res = await fetch(`${BASE_URL}/api/cron/update-orders`, {
-      headers: { Authorization: `Bearer ${CRON_SECRET}` },
-      signal: AbortSignal.timeout(10000),
-    });
+new CronJob(
+  "*/5 * * * * *",
+  async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/cron/update-orders`, {
+        headers: { Authorization: `Bearer ${CRON_SECRET}` },
+        signal: AbortSignal.timeout(10000),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      console.error("[cron]", new Date().toISOString(), "error:", data);
-      return;
+      if (!res.ok) {
+        console.error("[cron]", new Date().toISOString(), "error:", data);
+        return;
+      }
+
+      if (data.advancedToOutForDelivery > 0 || data.advancedToCompleted > 0) {
+        console.log("[cron]", new Date().toISOString(), data);
+      }
+    } catch (err) {
+      console.error("[cron] fetch error:", err.message);
     }
-
-    if (data.advancedToOutForDelivery > 0 || data.advancedToCompleted > 0) {
-      console.log("[cron]", new Date().toISOString(), data);
-    }
-  } catch (err) {
-    console.error("[cron] fetch error:", err.message);
-  }
-});
+  },
+  null,
+  true,
+);

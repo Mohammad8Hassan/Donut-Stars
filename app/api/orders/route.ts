@@ -428,10 +428,13 @@ export async function POST(req: Request) {
     const effectivePaymentStatus = paymentMethod === "cash-on-delivery" ? "pending" : "paid";
     const orderStatus = "preparing";
 
-    // Estimate preparation time: 5 min base + 1 min per item + 2 extra min per box.
-    const preparingMins = 0.5 ;
-    // Delivery window is randomly 30 or 45 minutes after the order is ready.
-    const deliveryMins = 1;
+
+    const preparingMins = 0.3; // 18 seconds
+    const deliveryMins = 1.5;
+    // MySQL's DATE_ADD rounds fractional MINUTE intervals to the nearest whole
+    // minute (0.5 -> 1), so convert to whole seconds before building the SQL.
+    const preparingSecs = Math.round(preparingMins * 60);
+    const deliverySecs = Math.round(deliveryMins * 60);
 
     // -----------------------------------------------------------------------
     // Database transaction
@@ -491,8 +494,8 @@ export async function POST(req: Request) {
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
           ${effectivePaymentStatus === "paid" ? "NOW()" : "NULL"},
-          DATE_ADD(NOW(), INTERVAL ${preparingMins} MINUTE),
-          DATE_ADD(NOW(), INTERVAL ${preparingMins + deliveryMins} MINUTE)
+          DATE_ADD(NOW(), INTERVAL ${preparingSecs} SECOND),
+          DATE_ADD(NOW(), INTERVAL ${deliverySecs} SECOND)
         )
         `,
         [

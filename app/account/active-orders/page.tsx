@@ -1,6 +1,7 @@
 "use client";
 
 import { AccountCard, AccountSectionHeading } from "@/app/components/account/AccountUi";
+import OrderStatusAnimation from "@/app/components/OrderStatusAnimation";
 import { getStatusLabel, getStatusBadgeClasses } from "@/lib/orderStatus";
 import { useGetActiveOrdersQuery } from "@/app/store/orderApi";
 
@@ -106,9 +107,12 @@ export default function ActiveOrdersPage() {
                       </h3>
                     </div>
 
-                    <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
-                      {getStatusLabel(order.status)}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <OrderStatusAnimation status={order.status} size="md" />
+                      <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(order.status)}`}>
+                        {getStatusLabel(order.status)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid gap-4 xl:grid-cols-2">

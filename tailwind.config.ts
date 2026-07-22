@@ -61,6 +61,25 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		keyframes: {
+  			bob: {
+  				'0%, 100%': { transform: 'translateY(0)' },
+  				'50%': { transform: 'translateY(-15%)' }
+  			},
+  			steam: {
+  				'0%': { transform: 'translateY(0) scale(1)', opacity: '0.6' },
+  				'100%': { transform: 'translateY(-160%) scale(1.6)', opacity: '0' }
+  			},
+  			ride: {
+  				'0%, 100%': { transform: 'translateX(-8%) rotate(-3deg)' },
+  				'50%': { transform: 'translateX(8%) rotate(3deg)' }
+  			}
+  		},
+  		animation: {
+  			bob: 'bob 1.4s ease-in-out infinite',
+  			steam: 'steam 1.6s ease-out infinite',
+  			ride: 'ride 1.1s ease-in-out infinite'
   		}
   	}
   },

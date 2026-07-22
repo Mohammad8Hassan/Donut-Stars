@@ -161,6 +161,11 @@ export const orderApi = createApi({
   // Same idea but for the browser's online/offline events — refetch once the
   // network comes back after a drop.
   refetchOnReconnect: true,
+  // "ActiveOrders" backs getActiveOrders below — invalidated right after a
+  // logged-in checkout (app/payment/page.tsx) so the navbar's
+  // ActiveOrdersStrip picks up a just-placed order immediately instead of
+  // waiting for its next 15s poll.
+  tagTypes: ["ActiveOrders"],
   endpoints: (builder) => ({
     // -------------------------------------------------------------------
     // trackOrder — GET /api/orders/track?orderId=&phone=
@@ -214,6 +219,7 @@ export const orderApi = createApi({
       // The route responds with { orders: [...] }; unwrap it the same way
       // trackOrder unwraps { order: {...} } above.
       transformResponse: (response: { orders: AccountOrder[] }) => response.orders,
+      providesTags: ["ActiveOrders"],
     }),
   }),
 });

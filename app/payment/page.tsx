@@ -7,8 +7,10 @@ import { CreditCard, MapPin, Receipt } from "lucide-react";
 
 import { authFetch } from "@/app/api/authFetch";
 import { useAuth } from "@/app/context/useAuth";
+import { addGuestOrder } from "@/lib/guestOrders";
 import { useAppSelector } from "../store/hooks";
 import { clearCart, selectCartItems, selectCartTotal } from "../store/cartSlice";
+import { orderApi } from "../store/orderApi";
 
 type Address = {
   id: number;
@@ -275,6 +277,15 @@ export default function PaymentPage(): JSX.Element {
       const data = await res.json();
       setSuccess(`Order #${data.orderId} placed successfully.`);
       setPlacedOrderId(data.orderId ?? null);
+
+      if (isGuest && data.orderId) {
+        addGuestOrder(String(data.orderId), guestAddress.phone.trim());
+      } else if (!isGuest) {
+        // Refetch the navbar's active-orders query right away instead of
+        // waiting for its next 15s poll.
+        dispatch(orderApi.util.invalidateTags(["ActiveOrders"]));
+      }
+
       dispatch(clearCart());
     } catch (err: any) {
       console.error("Order placement error:", err);

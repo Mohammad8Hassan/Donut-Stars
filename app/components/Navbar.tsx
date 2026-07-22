@@ -8,11 +8,17 @@ import logo from '@/public/logo.png'
 import { useAuth } from '../context/useAuth'
 import { useScroll } from './ScrollProvider'
 import navItems from './navItems'
+import ActiveOrdersStrip from './ActiveOrdersStrip'
 
 export default function Navbar() {
   const pathname = usePathname()
   const { scrolled } = useScroll()
-  const { user, setUser } = useAuth()
+  const { user, checked, setUser } = useAuth()
+
+  // /track is the guest-only lookup tool — once we're sure someone is
+  // logged in, they have app/account/active-orders instead. Stays visible
+  // until `checked` resolves so guests never see it disappear-then-flash.
+  const visibleNavItems = navItems.filter((item) => item.url !== '/track' || !(checked && user))
 
   const handleLogOut = async () => {
     try {
@@ -43,7 +49,7 @@ export default function Navbar() {
       >
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 px-2.5 py-2 sm:px-3 sm:py-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive =
                 item.url === '/'
                   ? pathname === item.url
@@ -77,59 +83,63 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {user ? (
-            <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
-              {user.roleName === 'admin' ? (
+          <div className="flex items-center justify-end gap-2 lg:min-w-0">
+            <ActiveOrdersStrip />
+
+            {user ? (
+              <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
+                {user.roleName === 'admin' ? (
+                  <Link
+                    href="/admin"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-rose-100 sm:h-10"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-rose-500" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </Link>
+                ) : null}
+
                 <Link
-                  href="/admin"
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-rose-100 sm:h-10"
+                  href="/account"
+                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm transition hover:border-rose-200 hover:bg-white/80"
                 >
-                  <LayoutDashboard className="h-4 w-4 text-rose-500" />
-                  <span className="hidden sm:inline">Admin</span>
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
+                    <UserRound className="h-4 w-4" />
+                  </div>
+                  <p className="max-w-[120px] truncate text-sm font-semibold text-zinc-900 sm:max-w-[180px]">{user.email}</p>
                 </Link>
-              ) : null}
 
-              <Link
-                href="/account"
-                className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm transition hover:border-rose-200 hover:bg-white/80"
-              >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
-                  <UserRound className="h-4 w-4" />
-                </div>
-                <p className="max-w-[120px] truncate text-sm font-semibold text-zinc-900 sm:max-w-[180px]">{user.email}</p>
-              </Link>
+                <button
+                  onClick={handleLogOut}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
+                {/* <div className="hidden items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm sm:flex">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
+                    <UserRound className="h-4 w-4" />
+                  </div>
+                  <p className="text-sm font-semibold text-zinc-900">Account</p>
+                </div> */}
 
-              <button
-                onClick={handleLogOut}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
-              {/* <div className="hidden items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm sm:flex">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
-                  <UserRound className="h-4 w-4" />
-                </div>
-                <p className="text-sm font-semibold text-zinc-900">Account</p>
-              </div> */}
-
-              <Link
-                href="/login"
-                className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/70 bg-white/70 px-3 text-sm font-semibold text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50 sm:h-10"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex h-9 items-center justify-center rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+                <Link
+                  href="/login"
+                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/70 bg-white/70 px-3 text-sm font-semibold text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50 sm:h-10"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex h-9 items-center justify-center rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

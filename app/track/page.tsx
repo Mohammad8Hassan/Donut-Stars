@@ -4,14 +4,13 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ShieldCheck } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query/react";
-import { getStatusBadgeClasses, getStatusLabel } from "@/lib/orderStatus";
+import { getStatusBadgeClasses, getStatusLabel, isTerminalStatus } from "@/lib/orderStatus";
 import { useTrackOrderQuery, type TrackOrderArgs } from "@/app/store/orderApi";
 
 // How often to re-poll a tracked order while it's still in flight. The cron
 // worker only advances statuses once a minute, so this just needs to be
 // frequent enough to feel live without hammering the endpoint.
 const POLL_INTERVAL_MS = 15000;
-const TERMINAL_STATUSES = new Set(["completed", "cancelled"]);
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "data" in error) {
@@ -54,7 +53,7 @@ function TrackOrderForm() {
       setPollingInterval(0);
       return;
     }
-    if (order && TERMINAL_STATUSES.has(order.status)) {
+    if (order && isTerminalStatus(order.status)) {
       setPollingInterval(0);
       return;
     }
@@ -78,7 +77,7 @@ function TrackOrderForm() {
 
   const loading = submittedArgs ? isLoading : false;
   const error = formError ?? (submittedArgs && queryError ? getErrorMessage(queryError) : null);
-  const isLive = Boolean(submittedArgs && order && !TERMINAL_STATUSES.has(order.status) && !queryError);
+  const isLive = Boolean(submittedArgs && order && !isTerminalStatus(order.status) && !queryError);
 
   const addressParts = order
     ? [order.shipping_line1, order.shipping_city, order.shipping_postal_code, order.shipping_country].filter(Boolean).join(", ")

@@ -7,6 +7,14 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+// Statuses that never advance further (see lib/advanceOrders.ts) — used to
+// stop polling and to prune resolved orders out of guest/navbar tracking.
+export const TERMINAL_STATUSES = new Set<string>(["completed", "cancelled"]);
+
+export function isTerminalStatus(status: string): boolean {
+  return TERMINAL_STATUSES.has(status);
+}
+
 export function getStatusLabel(status: string): string {
   switch (status) {
     case "preparing":        return "Preparing";

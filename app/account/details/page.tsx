@@ -88,8 +88,8 @@ export default function AccountDetailsPage() {
         description="Use the same details you want applied to orders, receipts, and future account updates."
       />
 
-      <form className="mt-6 grid gap-5" onSubmit={onSubmit}>
-        <div className="grid gap-5 lg:grid-cols-2">
+      <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
+        <div className="grid gap-4 lg:grid-cols-2">
           <AccountInput
             label="Name"
             value={form.name}
@@ -127,7 +127,7 @@ export default function AccountDetailsPage() {
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500 disabled:opacity-70"
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500 disabled:opacity-70"
             disabled={saving}
           >
             {saving ? "Saving..." : "Save Changes"}

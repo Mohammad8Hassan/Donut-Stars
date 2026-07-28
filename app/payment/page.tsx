@@ -313,8 +313,8 @@ export default function PaymentPage(): JSX.Element {
   if (!checked || (cartItems.length === 0 && !orderPlacedRef.current)) {
     return (
       <main className="relative isolate overflow-hidden">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-          <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
+          <section className="overflow-hidden rounded-[28px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
             <PageLoader title="Preparing checkout" message="Hang tight while we get things ready." />
           </section>
         </div>
@@ -327,36 +327,36 @@ export default function PaymentPage(): JSX.Element {
 
 
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
-          <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50 px-6 py-8 sm:px-8">
-            <h1 className="text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">Payment</h1>
-            <p className="mt-3 text-sm leading-7 text-zinc-600 sm:text-base">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
+        <section className="overflow-hidden rounded-[28px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
+          <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50 px-4 py-3 sm:px-5">
+            <h1 className="text-lg font-black leading-tight tracking-tight text-zinc-950 sm:text-xl">Payment</h1>
+            <p className="mt-1 hidden text-xs leading-5 text-zinc-600 sm:block">
               Choose a delivery address, select your payment method, and place your order.
             </p>
           </div>
         </section>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <form
             onSubmit={handleSubmit}
-            className="rounded-[32px] border border-white/70 bg-white/85 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6"
+            className="rounded-[28px] border border-white/70 bg-white/85 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:p-5"
           >
-            <section className="border-b border-zinc-100 pb-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
-                    <MapPin className="h-6 w-6" strokeWidth={2.1} />
+            <section className="border-b border-zinc-100 pb-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
+                    <MapPin className="h-5 w-5" strokeWidth={2.1} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Delivery</p>
-                    <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">Choose your address</h2>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500">Delivery</p>
+                    <h2 className="mt-1 text-lg font-black leading-tight tracking-tight text-zinc-950">Choose your address</h2>
                   </div>
                 </div>
                 {!isGuest && (
                   <Link
                     href="/account/addresses"
-                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50"
+                    className="inline-flex h-10 items-center justify-center rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-700 transition hover:border-rose-200 hover:bg-rose-50"
                   >
                     Manage Addresses
                   </Link>
@@ -364,7 +364,7 @@ export default function PaymentPage(): JSX.Element {
               </div>
 
               {isGuest ? (
-                <div className="mt-5">
+                <div className="mt-3">
                   <p className="text-sm text-zinc-600">
                     Checking out as a guest. Enter your delivery details below, or{" "}
                     <Link href="/login" className="font-semibold text-rose-600 underline">
@@ -373,8 +373,8 @@ export default function PaymentPage(): JSX.Element {
                     to use a saved address.
                   </p>
 
-                  <div className="mt-4 grid gap-4 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="mt-3 grid gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3 sm:p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <label className="block">
                         <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Full Name</span>
                         <input
@@ -408,7 +408,7 @@ export default function PaymentPage(): JSX.Element {
                       {guestAddressErrors.line1 && <p className="mt-1 text-sm text-red-500">{guestAddressErrors.line1}</p>}
                     </label>
 
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-3">
                       <label className="block">
                         <span className="mb-1.5 block text-sm font-semibold text-zinc-700">City</span>
                         <input
@@ -443,20 +443,20 @@ export default function PaymentPage(): JSX.Element {
                 </div>
               ) : (
                 <>
-                  {loadingAddresses && <p className="mt-5 text-sm text-zinc-500">Loading addresses...</p>}
+                  {loadingAddresses && <p className="mt-3 text-sm text-zinc-500">Loading addresses...</p>}
 
                   {!loadingAddresses && addresses.length === 0 && (
-                    <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                    <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                       No saved addresses found. Add one before placing your order.
                     </div>
                   )}
 
                   {!loadingAddresses && addresses.length > 0 && (
-                    <div className="mt-5 grid gap-3">
+                    <div className="mt-3 grid gap-2">
                       {addresses.map((addr) => (
                         <label
                           key={addr.id}
-                          className={`cursor-pointer rounded-[28px] border p-4 transition ${
+                          className={`cursor-pointer rounded-2xl border p-3 transition ${
                             selectedAddressId === addr.id
                               ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
                               : "border-zinc-200 bg-white hover:border-rose-200"
@@ -496,52 +496,52 @@ export default function PaymentPage(): JSX.Element {
               )}
             </section>
 
-            <section className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-white shadow-[0_16px_34px_rgba(15,23,42,0.16)]">
-                  <CreditCard className="h-6 w-6" strokeWidth={2.1} />
+            <section className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-white shadow-[0_16px_34px_rgba(15,23,42,0.16)]">
+                  <CreditCard className="h-5 w-5" strokeWidth={2.1} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Payment</p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950">How would you like to pay?</h2>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500">Payment</p>
+                  <h2 className="mt-1 text-lg font-black leading-tight tracking-tight text-zinc-950">How would you like to pay?</h2>
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => update("paymentMethod", "demo-card")}
-                  className={`rounded-[28px] border p-4 text-left transition ${
+                  className={`rounded-2xl border p-3 text-left transition ${
                     form.paymentMethod === "demo-card"
                       ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
                       : "border-zinc-200 bg-white hover:border-rose-200"
                   }`}
                 >
-                  <p className="text-lg font-black text-zinc-950">Card</p>
-                  <p className="mt-1 text-sm text-zinc-600">Pay now with the demo card form.</p>
+                  <p className="text-base font-black text-zinc-950">Card</p>
+                  <p className="mt-0.5 text-sm text-zinc-600">Pay now with the demo card form.</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => update("paymentMethod", "cash-on-delivery")}
-                  className={`rounded-[28px] border p-4 text-left transition ${
+                  className={`rounded-2xl border p-3 text-left transition ${
                     form.paymentMethod === "cash-on-delivery"
                       ? "border-rose-300 bg-gradient-to-br from-white to-rose-50 shadow-sm"
                       : "border-zinc-200 bg-white hover:border-rose-200"
                   }`}
                 >
-                  <p className="text-lg font-black text-zinc-950">Cash on delivery</p>
-                  <p className="mt-1 text-sm text-zinc-600">Pay when your order arrives.</p>
+                  <p className="text-base font-black text-zinc-950">Cash on delivery</p>
+                  <p className="mt-0.5 text-sm text-zinc-600">Pay when your order arrives.</p>
                 </button>
               </div>
 
               {form.paymentMethod === "demo-card" && (
-                <div className="mt-5 grid gap-4 rounded-[28px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5">
+                <div className="mt-3 grid gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-3 sm:p-4">
                   <label className="block">
                     <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Card Number</span>
                     <input
                       inputMode="numeric"
                       autoComplete="cc-number"
-                      className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.cardNumber ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                      className={`w-full rounded-2xl border px-4 py-2.5 text-zinc-900 outline-none transition ${fieldErrors.cardNumber ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
                       value={form.cardNumber}
                       onChange={(e) => update("cardNumber", formatCardNumber(e.target.value))}
                       placeholder="4242 4242 4242 4242"
@@ -549,13 +549,13 @@ export default function PaymentPage(): JSX.Element {
                     {fieldErrors.cardNumber && <p className="mt-1 text-sm text-red-500">{fieldErrors.cardNumber}</p>}
                   </label>
 
-                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_120px]">
+                  <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px]">
                     <label className="block">
                       <span className="mb-1.5 block text-sm font-semibold text-zinc-700">Expiry</span>
                       <input
                         inputMode="numeric"
                         autoComplete="cc-exp"
-                        className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.expiry ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        className={`w-full rounded-2xl border px-4 py-2.5 text-zinc-900 outline-none transition ${fieldErrors.expiry ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
                         value={form.expiry}
                         onChange={(e) => update("expiry", formatExpiry(e.target.value))}
                         placeholder="MM/YY"
@@ -568,7 +568,7 @@ export default function PaymentPage(): JSX.Element {
                       <input
                         inputMode="numeric"
                         autoComplete="cc-csc"
-                        className={`w-full rounded-2xl border px-4 py-3 text-zinc-900 outline-none transition ${fieldErrors.cvc ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
+                        className={`w-full rounded-2xl border px-4 py-2.5 text-zinc-900 outline-none transition ${fieldErrors.cvc ? "border-red-500" : "border-zinc-300 focus:border-rose-300"}`}
                         value={form.cvc}
                         onChange={(e) => update("cvc", formatCvc(e.target.value))}
                         placeholder="123"
@@ -579,9 +579,9 @@ export default function PaymentPage(): JSX.Element {
                 </div>
               )}
 
-              {error && <div className="mt-5 rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+              {error && <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
               {success && (
-                <div className="mt-5 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
                   {success}
                   {isGuest && placedOrderId && (
                     <>
@@ -604,32 +604,32 @@ export default function PaymentPage(): JSX.Element {
                   (!isGuest && !selectedAddressId) ||
                   !!success
                 }
-                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {payButtonLabel}
               </button>
             </section>
           </form>
 
-          <aside className="xl:sticky xl:top-8">
-            <section className="rounded-[32px] border border-zinc-950/10 bg-zinc-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-7">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
-                  <Receipt className="h-6 w-6" strokeWidth={2.1} />
+          <aside className="xl:sticky xl:top-4">
+            <section className="rounded-[28px] border border-zinc-950/10 bg-zinc-950 p-4 text-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.28)]">
+                  <Receipt className="h-5 w-5" strokeWidth={2.1} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-300">Summary</p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight">{itemCount} item{itemCount === 1 ? "" : "s"}</h2>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-300">Summary</p>
+                  <h2 className="mt-1 text-lg font-black leading-tight tracking-tight">{itemCount} item{itemCount === 1 ? "" : "s"}</h2>
                 </div>
               </div>
 
               {cartItems.length === 0 ? (
-                <div className="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm text-zinc-300">
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-300">
                   Your cart is empty.
                 </div>
               ) : (
                 <>
-                  <div className="mt-6 space-y-3 rounded-[28px] border border-white/10 bg-white/5 p-4">
+                  <div className="mt-3 space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
                     {cartItems.map((item) => (
                       <div key={item.id + (item.boxID ?? "")} className="flex items-start justify-between gap-3 text-sm">
                         <span className="text-zinc-300">
@@ -640,7 +640,7 @@ export default function PaymentPage(): JSX.Element {
                     ))}
                   </div>
 
-                  <div className="mt-4 space-y-3 rounded-[28px] border border-white/10 bg-white/5 p-4 text-sm">
+                  <div className="mt-3 space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm">
                     <div className="flex items-center justify-between gap-3 text-zinc-300">
                       <span>Subtotal</span>
                       <span className="font-semibold text-white">{formatCurrency(subtotal)}</span>
@@ -652,27 +652,27 @@ export default function PaymentPage(): JSX.Element {
                     <div className="h-px bg-white/10" />
                     <div className="flex items-end justify-between gap-3">
                       <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-300">Total</span>
-                      <span className="text-3xl font-black tracking-tight text-white">{formatCurrency(total)}</span>
+                      <span className="text-2xl font-black tracking-tight text-white">{formatCurrency(total)}</span>
                     </div>
                   </div>
                 </>
               )}
 
-              <p className="mt-4 text-sm leading-6 text-zinc-300">
+              <p className="mt-3 text-xs leading-5 text-zinc-300">
                 Orders are saved after payment or when cash on delivery is selected.
               </p>
 
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-4 flex flex-col gap-2">
                 <Link
                   href="/checkout"
-                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   Back to Checkout
                 </Link>
                 {success && (
                   <Link
                     href="/menu"
-                    className="inline-flex h-12 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400"
+                    className="inline-flex h-11 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400"
                   >
                     Start New Order
                   </Link>

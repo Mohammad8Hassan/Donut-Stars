@@ -287,9 +287,9 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <AccountCard>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <AccountSectionHeading
             title="Manage delivery destinations"
             description="Your default address can be reused at checkout, while any saved address stays ready for quick selection."
@@ -298,29 +298,29 @@ export default function AddressesPage() {
           {!showAddForm ? (
             <button
               onClick={() => setShowAddForm(true)}
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
+              className="inline-flex h-11 items-center justify-center rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
             >
               Add New Address
             </button>
           ) : null}
         </div>
 
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-4 flex flex-col gap-3">
           {loading ? <p className="text-sm text-zinc-500">Loading...</p> : null}
           {!loading && listError ? <p className="text-sm text-rose-600">{listError}</p> : null}
 
           {!loading && addresses.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-zinc-300 bg-zinc-50 p-6 text-sm text-zinc-500">
+            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-500">
               You have no saved addresses yet.
             </div>
           ) : null}
 
           {addresses.map((addr) => (
-            <div key={addr.id} className="rounded-[28px] border border-zinc-200 bg-gradient-to-br from-white to-rose-50 p-5">
+            <div key={addr.id} className="rounded-2xl border border-zinc-200 bg-gradient-to-br from-white to-rose-50 p-4">
               {editingId === addr.id ? (
-                <form onSubmit={onEditAddress} className="grid gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-lg font-black tracking-tight text-zinc-950">Edit address</p>
+                <form onSubmit={onEditAddress} className="grid gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-base font-black leading-tight tracking-tight text-zinc-950">Edit address</p>
                     {editError ? <p className="text-sm text-rose-600">{editError}</p> : null}
                   </div>
 
@@ -349,10 +349,10 @@ export default function AddressesPage() {
                   </div>
                 </form>
               ) : (
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xl font-black tracking-tight text-zinc-950">{addr.label ?? "Address"}</p>
+                      <p className="text-lg font-black leading-tight tracking-tight text-zinc-950">{addr.label ?? "Address"}</p>
                       {addr.is_default ? (
                         <span className="rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-600">
                           Default
@@ -360,7 +360,7 @@ export default function AddressesPage() {
                       ) : null}
                     </div>
 
-                    <div className="mt-3 space-y-1 text-sm leading-6 text-zinc-600">
+                    <div className="mt-1.5 space-y-0.5 text-sm leading-5 text-zinc-600">
                       <p className="font-semibold text-zinc-900">{addr.full_name}</p>
                       <p>{addr.phone}</p>
                       <p>{addr.line1}</p>
@@ -402,7 +402,7 @@ export default function AddressesPage() {
             description="Save an address once and keep it available for future orders."
           />
 
-          <form onSubmit={onAddAddress} className="mt-6 grid gap-4">
+          <form onSubmit={onAddAddress} className="mt-4 grid gap-3">
             {addError ? <p className="text-sm text-rose-600">{addError}</p> : null}
 
             <AddressFormFields form={form} setForm={setForm} />
@@ -411,7 +411,7 @@ export default function AddressesPage() {
               <button
                 type="submit"
                 disabled={savingAdd}
-                className="inline-flex h-12 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:opacity-70"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 disabled:opacity-70"
               >
                 {savingAdd ? "Saving..." : "Save Address"}
               </button>
@@ -422,7 +422,7 @@ export default function AddressesPage() {
                   setShowAddForm(false);
                   setAddError(null);
                 }}
-                className="inline-flex h-12 items-center justify-center rounded-2xl border border-zinc-200 px-5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-70"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 px-5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-70"
               >
                 Cancel
               </button>

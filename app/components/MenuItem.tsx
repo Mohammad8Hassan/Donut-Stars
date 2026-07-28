@@ -17,7 +17,7 @@ export default function MenuItem({ item, kind, children }: MenuItemProps) {
   return (
     <article className="group flex w-full h-full flex-col rounded-[30px] border border-zinc-300 bg-white p-3 shadow-[0_18px_42px_rgba(15,23,42,0.10)] ring-1 ring-white/90 transition duration-300 hover:border-rose-300 hover:shadow-[0_26px_48px_rgba(244,63,94,0.14)]">
       <div className="relative w-full overflow-hidden rounded-[26px] border border-zinc-200 bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.14),transparent_58%),linear-gradient(180deg,#fff8f4_0%,#fff1ea_100%)] ">
-        <div className="absolute w-full h-full bg-[radial-gradient(circle,rgba(251,113,133,0.18),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" />
+        <div className="absolute w-full h-full bg-[radial-gradient(ellipse,rgba(251,113,133,0.18)_0%,rgba(251,113,133,0.18)_55%,transparent_100%)] opacity-0 group-hover:animate-glow-pulse" />
 
         {item.tags && item.tags.length > 0 && (
           <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">

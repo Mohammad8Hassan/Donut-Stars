@@ -35,7 +35,7 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
   }
 
   return (
-    <div className="flex min-h-[52px] w-full overflow-hidden rounded-[18px] bg-zinc-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition-all duration-300 ease-out">
+    <div className="flex min-h-[2rem] w-full overflow-hidden rounded-[18px] bg-zinc-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition-all duration-300 ease-out">
       {inCart ? (
         <>
           <button

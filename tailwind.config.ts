@@ -63,6 +63,10 @@ const config: Config = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		keyframes: {
+  			glowPulse: {
+  				'0%, 100%': { opacity: '0', transform: 'scale(0.96)' },
+  				'50%': { opacity: '1', transform: 'scale(1.04)' }
+  			},
   			bob: {
   				'0%, 100%': { transform: 'translateY(0)' },
   				'50%': { transform: 'translateY(-15%)' }
@@ -83,6 +87,7 @@ const config: Config = {
   			}
   		},
   		animation: {
+  			'glow-pulse': 'glowPulse 1.2s ease-in-out infinite',
   			bob: 'bob 1.4s ease-in-out infinite',
   			steam: 'steam 1.6s ease-out infinite',
   			drive: 'drive 1.6s ease-in-out infinite',

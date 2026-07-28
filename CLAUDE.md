@@ -64,3 +64,17 @@ Per `AGENTS.md`: use [BoxBuilder.tsx](app/components/BoxBuilder.tsx) and [CartBa
 - Types shared across client/server live in `types.ts` (`IItem`, `IBoxItem`, `ICartItem`).
 - API routes return `{ error: string }` with an appropriate status code on failure, and log server-side with `console.error("<METHOD> <path> error:", err)`.
 - SQL is always parameterized with `?` placeholders — never string-concatenate user input into a query.
+
+<!-- TEMP SESSION NOTE — remove this section when no longer needed -->
+## [TEMP] Header/tab compactness pass (2026-07-28)
+
+Applied to `app/menu/page.tsx` and `app/components/BoxBuilder.tsx` — follow this density for any other header-style block (icon/eyebrow/title/description rows) unless told otherwise:
+
+- Container padding: `py-4`/`py-5`/`py-6` → `py-1.5`–`py-3` (drop the extra `sm:`/`lg:` step-ups where possible).
+- Titles: drop one size step (e.g. `text-2xl sm:text-3xl` → `text-lg sm:text-xl`), add `leading-tight`.
+- Descriptions: either fold into the title line, or keep but shrink (`text-xs leading-4`) and hide below `sm` with `hidden sm:block` — don't just delete informative copy outright.
+- Icons inside headers/tab triggers: size up, not down (e.g. tab icons `h-5 w-5` → `h-8 w-8`) — bigger icon + tighter surrounding padding reads as compact without shrinking tap targets.
+- Stat/eyebrow cards inside headers: `p-4`/`mt-5` gaps → `px-3 py-1.5`/`mt-2`.
+- Buttons that only make sense when a collection is non-empty (e.g. a header "Add New X" button when a matching empty-state CTA already exists) should be conditionally rendered on that collection's length, not always shown.
+<!-- END TEMP SESSION NOTE -->
+

@@ -206,21 +206,18 @@ export default function BoxBuilder({
 
           <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="flex min-h-0 flex-col border-b border-zinc-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 lg:border-b-0 lg:border-r">
-              <div className="px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
-                <div className="flex items-start gap-4 pr-12">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.25)]">
-                    <PackageOpen className="h-6 w-6" strokeWidth={2} />
+              <div className="px-5 py-3 sm:px-6">
+                <div className="flex items-center gap-3 pr-12">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_34px_rgba(244,63,94,0.25)]">
+                    <PackageOpen className="h-5 w-5" strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500">
                       {mode === "build" ? "Build your box" : "Update your box"}
                     </p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-zinc-950 sm:text-3xl">
-                      {boxItem.name}
+                    <h2 className="text-lg font-black leading-tight tracking-tight text-zinc-950 sm:text-xl">
+                      {boxItem.name} — pick {capacity} donuts
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-600">
-                      Pick {capacity} donuts to complete this box.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -278,9 +275,9 @@ export default function BoxBuilder({
             </section>
 
             <section className="flex min-h-0 flex-col bg-zinc-950 text-white">
-              <div className="border-b border-white/10 px-5 py-5 sm:px-6 sm:py-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-300">Choose donuts</p>
-                <h3 className="mt-2 text-2xl font-black tracking-tight">Pick from the menu</h3>
+              <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-300">Choose donuts</p>
+                <h3 className="text-lg font-black tracking-tight">Pick from the menu</h3>
               </div>
 
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto px-4 py-4 sm:grid-cols-2 sm:px-5 sm:py-5">
@@ -345,37 +342,39 @@ export default function BoxBuilder({
             <X size={18} />
           </button>
 
-          <div className="border-b border-zinc-100 bg-gradient-to-r from-rose-50 via-white to-amber-50 px-6 py-6 pr-16">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">Manage your boxes</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-950 sm:text-3xl">{boxItem.name}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-                  Review every {labelSize}-donut box in your cart, adjust quantities, swap selections, or remove any box you no longer want.
+          <div className="border-b border-zinc-100 bg-gradient-to-r from-rose-50 via-white to-amber-50 px-6 py-3 pr-16">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500">Manage your boxes</p>
+                <h2 className="text-lg font-black leading-tight tracking-tight text-zinc-950 sm:text-xl">{boxItem.name}</h2>
+                <p className="hidden text-xs leading-4 text-zinc-600 sm:block">
+                  Review, adjust, or remove any {labelSize}-donut box in your cart.
                 </p>
               </div>
 
-              <button
-                onClick={handleStartNewBox}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
-              >
-                <CirclePlus className="h-4 w-4" />
-                Add New {labelSize}-Box
-              </button>
+              {existingBoxes.length > 0 && (
+                <button
+                  onClick={handleStartNewBox}
+                  className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
+                >
+                  <CirclePlus className="h-4 w-4" />
+                  Add New {labelSize}-Box
+                </button>
+              )}
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Box Type</p>
-                <p className="mt-2 text-lg font-black text-zinc-950">{labelSize}-pack</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-3 py-1.5 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Box Type</p>
+                <p className="text-base font-black text-zinc-950">{labelSize}-pack</p>
               </div>
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">In Cart</p>
-                <p className="mt-2 text-lg font-black text-zinc-950">{existingBoxes.length} variant{existingBoxes.length === 1 ? "" : "s"}</p>
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-3 py-1.5 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">In Cart</p>
+                <p className="text-base font-black text-zinc-950">{existingBoxes.length} variant{existingBoxes.length === 1 ? "" : "s"}</p>
               </div>
-              <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Unit Price</p>
-                <p className="mt-2 text-lg font-black text-zinc-950">{formatCurrency(boxItem.price)}</p>
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-3 py-1.5 shadow-sm">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Unit Price</p>
+                <p className="text-base font-black text-zinc-950">{formatCurrency(boxItem.price)}</p>
               </div>
             </div>
           </div>

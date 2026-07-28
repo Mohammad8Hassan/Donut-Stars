@@ -203,18 +203,18 @@ function BuyContent() {
             </div>
           ) : (
             <Tabs value={activeTab} onValueChange={value => setActiveTab(value as typeof activeTab)} className="w-full">
-              <div className="border-b border-rose-200 bg-[linear-gradient(180deg,#fffdfa_0%,#fff5f0_100%)] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div className="border-b border-rose-200 bg-[linear-gradient(180deg,#fffdfa_0%,#fff5f0_100%)] px-4 py-1.5 sm:px-6 lg:px-8">
+                <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
                   <div className="max-w-3xl">
-                    <h1 className="text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">
+                    <h1 className="text-lg font-black tracking-tight text-zinc-950 sm:text-xl">
                       Order Menu
                     </h1>
-                    <p className="mt-2 text-sm leading-6 text-zinc-600 sm:text-base">
+                    <p className="hidden text-xs leading-4 text-zinc-600 sm:block">
                       {activeMeta.description}
                     </p>
                   </div>
 
-                  <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-[28px] border-2 border-zinc-950 bg-zinc-950 p-2 shadow-[0_16px_36px_rgba(15,23,42,0.16)] xl:w-[760px]">
+                  <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-[28px] border-2 border-zinc-950 bg-zinc-950 p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.16)] xl:w-[760px]">
                     {tabMeta.map(tab => {
                       const Icon = tab.icon
 
@@ -222,10 +222,10 @@ function BuyContent() {
                         <TabsTrigger
                           key={tab.value}
                           value={tab.value}
-                          className="min-h-[72px] rounded-[22px] border border-transparent px-4 py-4 text-base font-black text-white/78 data-[state=active]:border-white data-[state=active]:bg-[linear-gradient(135deg,#fff8f5_0%,#ffffff_100%)] data-[state=active]:text-zinc-950 data-[state=active]:shadow-[0_12px_24px_rgba(255,255,255,0.14)]"
+                          className="min-h-[44px] rounded-[22px] border border-transparent px-4 py-1.5 text-base font-black text-white/78 data-[state=active]:border-white data-[state=active]:bg-[linear-gradient(135deg,#fff8f5_0%,#ffffff_100%)] data-[state=active]:text-zinc-950 data-[state=active]:shadow-[0_12px_24px_rgba(255,255,255,0.14)]"
                         >
-                          <span className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
-                            <Icon className="h-5 w-5" />
+                          <span className="flex flex-row items-center justify-center gap-2">
+                            <Icon className="h-8 w-8" />
                             {tab.label}
                           </span>
                         </TabsTrigger>

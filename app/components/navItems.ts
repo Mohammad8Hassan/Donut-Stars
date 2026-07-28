@@ -4,8 +4,8 @@ const navItems = [
     url: "/"
   },
   {
-    name: "Donuts",
-    url: "/buy"
+    name: "Menu",
+    url: "/menu"
   },
   {
     name: "Account",

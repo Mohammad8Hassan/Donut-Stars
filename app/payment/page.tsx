@@ -671,7 +671,7 @@ export default function PaymentPage(): JSX.Element {
                 </Link>
                 {success && (
                   <Link
-                    href="/buy"
+                    href="/menu"
                     className="inline-flex h-12 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400"
                   >
                     Start New Order

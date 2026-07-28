@@ -430,7 +430,7 @@ export async function POST(req: Request) {
 
 
     const preparingMins = 0.3; // 18 seconds
-    const deliveryMins = 1.5;
+    const deliveryMins = 10.5;
     // MySQL's DATE_ADD rounds fractional MINUTE intervals to the nearest whole
     // minute (0.5 -> 1), so convert to whole seconds before building the SQL.
     const preparingSecs = Math.round(preparingMins * 60);

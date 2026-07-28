@@ -47,7 +47,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
-                href="/buy"
+                href="/menu"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100"
               >
                 Order Donuts
@@ -79,7 +79,7 @@ export default function Home() {
             </div>
 
             <Link
-              href="/buy?tab=donuts"
+              href="/menu"
               className="inline-flex h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
             >
               View full menu
@@ -157,7 +157,7 @@ export default function Home() {
 
               <div className="mt-6">
                 <Link
-                  href="/buy?tab=boxes"
+                  href="/menu?tab=boxes"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
                 >
                   Build a box
@@ -219,7 +219,7 @@ export default function Home() {
 
               <div className="mt-6">
                 <Link
-                  href="/buy?tab=drinks"
+                  href="/menu?tab=drinks"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100"
                 >
                   Shop drinks
@@ -236,31 +236,23 @@ export default function Home() {
           <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">
-                Ready when you are
+                Who we are
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
-                Your box is one order away.
+                Made by people who love donuts.
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
-                Pick your favorites, add a drink if you're feeling it, and
-                we'll have it ready fresh for pickup or delivery.
+                Behind every box is a small team of bakers and drivers who
+                show up before sunrise to make sure everything's fresh, fast,
+                and made with care — from the first proof to the last
+                delivery.
               </p>
-
-              <div className="mt-8">
-                <Link
-                  href="/buy"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500"
-                >
-                  Start Your Order
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
             </div>
 
             <div className="relative min-h-[300px] lg:min-h-[420px]">
               <Image
-                src="/landing/asset2.jpg"
-                alt="Large donut landing visual"
+                src="/job.jpg"
+                alt="Our team at work"
                 fill
                 className="object-cover"
               />

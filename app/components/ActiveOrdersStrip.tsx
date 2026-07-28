@@ -30,9 +30,11 @@ type ActiveOrderEntry = {
 };
 
 function getAccentClasses(status: string): string {
-  if (status === "preparing") return "border-orange-200 bg-gradient-to-r from-orange-50 via-white to-orange-50";
-  if (status === "out_for_delivery") return "border-violet-200 bg-gradient-to-r from-violet-50 via-white to-violet-50";
-  return "border-zinc-200 bg-white";
+  if (status === "preparing")
+    return "border-orange-200/80 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 shadow-[0_14px_30px_rgba(249,115,22,0.16)] hover:shadow-[0_18px_38px_rgba(249,115,22,0.24)]";
+  if (status === "out_for_delivery")
+    return "border-violet-200/80 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-[0_14px_30px_rgba(139,92,246,0.14)] hover:shadow-[0_18px_38px_rgba(139,92,246,0.2)]";
+  return "border-zinc-200 bg-white shadow-sm hover:shadow-md";
 }
 
 // Fetches one guest order's live status and reports it upward — renders
@@ -70,7 +72,7 @@ function OrderCard({ entry, expandable }: { entry: ActiveOrderEntry; expandable:
   return (
     <Link
       href={entry.href}
-      className={`flex items-center gap-2.5 rounded-2xl border px-3 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${getAccentClasses(entry.status)}`}
+      className={`flex items-center gap-2.5 rounded-full border px-3 py-2 transition hover:-translate-y-0.5 ${getAccentClasses(entry.status)}`}
     >
       <OrderStatusAnimation status={entry.status} size="lg" />
       <div className="flex flex-col leading-tight">

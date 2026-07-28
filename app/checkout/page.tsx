@@ -60,7 +60,7 @@ export default function CheckoutPage() {
               Pick your favorites and come back when you&apos;re ready.
             </p>
             <Link
-              href="/buy"
+              href="/menu"
               className="mt-8 inline-flex h-12 items-center justify-center rounded-2xl bg-zinc-950 px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
             >
               Browse Menu
@@ -205,7 +205,7 @@ export default function CheckoutPage() {
                   Continue to Payment
                 </Link>
                 <Link
-                  href="/buy"
+                  href="/menu"
                   className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   Add More Items

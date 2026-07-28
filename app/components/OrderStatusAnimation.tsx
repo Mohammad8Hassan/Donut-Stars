@@ -40,10 +40,29 @@ export default function OrderStatusAnimation({ status, size = "md" }: Props) {
   }
 
   if (status === "out_for_delivery") {
+    // Outer wrapper stays overflow-visible so the ping ring can glow past the
+    // circle's edge; the inner circle clips so the bike reads as riding
+    // through the frame (enters/exits the edges) instead of just wobbling
+    // in place — clipping needs its own layer since the ping ring shouldn't
+    // be clipped too.
     return (
-      <div className={`relative flex ${circle} shrink-0 items-center justify-center rounded-full bg-violet-50`}>
+      <div className={`relative flex ${circle} shrink-0 items-center justify-center`}>
         {ping && <span className="absolute inset-0 rounded-full bg-violet-300/50 animate-ping" />}
-        <Bike className={`${icon} relative animate-ride text-violet-600`} strokeWidth={2.2} />
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-violet-50">
+          <span
+            className="absolute left-[20%] top-[42%] h-0.5 w-2 rounded-full bg-violet-300 animate-speedline"
+            style={{ animationDelay: "0s" }}
+          />
+          <span
+            className="absolute left-[30%] top-[58%] h-0.5 w-2.5 rounded-full bg-violet-300 animate-speedline"
+            style={{ animationDelay: "0.25s" }}
+          />
+          <span
+            className="absolute left-[24%] top-[50%] h-0.5 w-1.5 rounded-full bg-violet-300 animate-speedline"
+            style={{ animationDelay: "0.5s" }}
+          />
+          <Bike className={`${icon} relative animate-drive text-violet-600`} strokeWidth={2.2} />
+        </div>
       </div>
     );
   }

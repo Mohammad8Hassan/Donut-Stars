@@ -71,15 +71,22 @@ const config: Config = {
   				'0%': { transform: 'translateY(0) scale(1)', opacity: '0.6' },
   				'100%': { transform: 'translateY(-160%) scale(1.6)', opacity: '0' }
   			},
-  			ride: {
-  				'0%, 100%': { transform: 'translateX(-8%) rotate(-3deg)' },
-  				'50%': { transform: 'translateX(8%) rotate(3deg)' }
+  			drive: {
+  				'0%': { transform: 'translateX(-140%) translateY(0) rotate(0deg)' },
+  				'50%': { transform: 'translateX(0%) translateY(-14%) rotate(-4deg)' },
+  				'100%': { transform: 'translateX(140%) translateY(0) rotate(0deg)' }
+  			},
+  			speedline: {
+  				'0%': { transform: 'translateX(5px)', opacity: '0' },
+  				'35%': { opacity: '1' },
+  				'100%': { transform: 'translateX(-9px)', opacity: '0' }
   			}
   		},
   		animation: {
   			bob: 'bob 1.4s ease-in-out infinite',
   			steam: 'steam 1.6s ease-out infinite',
-  			ride: 'ride 1.1s ease-in-out infinite'
+  			drive: 'drive 1.6s ease-in-out infinite',
+  			speedline: 'speedline 1.6s ease-in-out infinite'
   		}
   	}
   },

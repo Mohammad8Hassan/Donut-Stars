@@ -14,19 +14,19 @@ import footerBanner from '@/public/asset3.jpg'
 const contactItems = [
   {
     label: 'Phone',
-    value: '101001011',
-    href: 'tel:101001011',
+    value: '(555) 204-8890',
+    href: 'tel:+15552048890',
     icon: Phone,
   },
   {
     label: 'Email',
-    value: 'hobba@hobba.hhh',
-    href: 'mailto:hobba@hobba.hhh',
+    value: 'hello@donutstars.com',
+    href: 'mailto:hello@donutstars.com',
     icon: Mail,
   },
   {
     label: 'Location',
-    value: 'The street beside the building',
+    value: '482 Maple Avenue, Portland, OR',
     href: '#',
     icon: MapPin,
   },
@@ -51,7 +51,7 @@ export default function Footer() {
               Donut Stars
             </p>
             <h2 className="mt-3 max-w-2xl text-3xl font-black tracking-tight text-white sm:text-4xl">
-              Keep the celebration going with custom boxes, catering, and quick help when you need it.
+              Contact us for orders, custom boxes, or any questions about your delivery.
             </h2>
 
             <div className="mt-8 space-y-4">
@@ -89,7 +89,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="relative min-h-[280px] overflow-hidden self-stretch lg:min-h-full">
+        {/* <div className="relative min-h-[280px] overflow-hidden self-stretch lg:min-h-full">
           <Image
             src={footerBanner}
             alt="Donut Stars assortment"
@@ -101,7 +101,7 @@ export default function Footer() {
           <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-transparent sm:w-32 lg:w-40" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-900/90 to-transparent sm:h-20" />
           <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-zinc-950/55 to-transparent sm:h-16" />
-        </div>
+        </div> */}
       </div>
     </footer>
   )

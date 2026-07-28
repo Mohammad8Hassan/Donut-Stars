@@ -91,7 +91,7 @@ function BuyContent() {
     return (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {items.map(item => (
-          <MenuItem key={item.id} item={item}>
+          <MenuItem key={item.id} item={item} kind={kind}>
             {kind === 'box' ? (
               <QuantitySelectorBox
                 item={item as IBoxItem}

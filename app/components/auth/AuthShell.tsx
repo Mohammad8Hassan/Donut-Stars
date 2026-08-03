@@ -37,8 +37,8 @@ export default function AuthShell({
   const imageFirst = imageSide === "left";
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <div className="relative flex flex-1 flex-col overflow-hidden">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <div className="grid w-full overflow-hidden rounded-[32px] border border-white/80 bg-white/78 shadow-[0_28px_80px_rgba(15,23,42,0.12)] backdrop-blur-2xl xl:grid-cols-[0.88fr_1fr]">
           <section className={`relative hidden min-h-[620px] overflow-hidden xl:block ${imageFirst ? "xl:order-1" : "xl:order-2"}`}>
             <Image
@@ -84,6 +84,6 @@ export default function AuthShell({
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

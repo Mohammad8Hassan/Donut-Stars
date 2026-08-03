@@ -312,18 +312,18 @@ export default function PaymentPage(): JSX.Element {
 
   if (!checked || (cartItems.length === 0 && !orderPlacedRef.current)) {
     return (
-      <main className="relative isolate overflow-hidden">
+      <div className="relative isolate overflow-hidden">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
           <section className="overflow-hidden rounded-[28px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
             <PageLoader title="Preparing checkout" message="Hang tight while we get things ready." />
           </section>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="relative isolate overflow-hidden">
+    <div className="relative isolate overflow-hidden">
 
 
 
@@ -682,6 +682,6 @@ export default function PaymentPage(): JSX.Element {
           </aside>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

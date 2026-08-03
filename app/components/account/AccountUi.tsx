@@ -69,8 +69,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const initials = getInitials(user?.name, user?.email);
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden">
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 lg:py-4">
+    <div className="relative isolate flex flex-1 flex-col overflow-hidden">
+      <div className="mx-auto grid flex-1 max-w-7xl gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8 lg:py-4">
         <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
           <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-white/70 bg-zinc-950 text-white shadow-[0_28px_70px_rgba(15,23,42,0.2)]">
             <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(251,113,133,0.35),_transparent_40%)] p-4">

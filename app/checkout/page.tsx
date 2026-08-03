@@ -46,36 +46,28 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <main className="relative isolate overflow-hidden">
-        
-        
-
-        <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-3xl items-center px-4 py-6 sm:px-6 lg:px-8">
-          <section className="w-full rounded-[28px] border border-white/70 bg-white/85 p-6 text-center shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_32px_rgba(244,63,94,0.25)]">
-              <ShoppingBag className="h-6 w-6" strokeWidth={2.1} />
-            </div>
-            <h1 className="mt-3 text-xl font-black leading-tight tracking-tight text-zinc-950">Your cart is empty</h1>
-            <p className="mx-auto mt-1 max-w-lg text-sm leading-6 text-zinc-600">
-              Pick your favorites and come back when you&apos;re ready.
-            </p>
-            <Link
-              href="/menu"
-              className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-zinc-950 px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
-            >
-              Browse Menu
-            </Link>
-          </section>
-        </div>
-      </main>
+      <div className="relative isolate flex flex-1 items-center overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+        <section className="mx-auto w-full max-w-3xl rounded-[28px] border border-white/70 bg-white/85 p-6 text-center shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_16px_32px_rgba(244,63,94,0.25)]">
+            <ShoppingBag className="h-6 w-6" strokeWidth={2.1} />
+          </div>
+          <h1 className="mt-3 text-xl font-black leading-tight tracking-tight text-zinc-950">Your cart is empty</h1>
+          <p className="mx-auto mt-1 max-w-lg text-sm leading-6 text-zinc-600">
+            Pick your favorites and come back when you&apos;re ready.
+          </p>
+          <Link
+            href="/menu"
+            className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-zinc-950 px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
+          >
+            Browse Menu
+          </Link>
+        </section>
+      </div>
     );
   }
 
   return (
-    <main className="relative isolate overflow-hidden">
-      
-      
-
+    <div className="relative isolate overflow-hidden h-full">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-5">
         <section className="overflow-hidden rounded-[28px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
           <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50 px-4 py-3 sm:px-5">
@@ -215,6 +207,6 @@ export default function CheckoutPage() {
           </aside>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

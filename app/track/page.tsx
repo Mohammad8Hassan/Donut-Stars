@@ -84,7 +84,7 @@ function TrackOrderForm() {
     : "";
 
   return (
-    <main className="relative isolate overflow-hidden">
+    <div className="relative isolate overflow-hidden">
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <section className="overflow-hidden rounded-[32px] border border-rose-100 bg-white/85 shadow-[0_28px_70px_rgba(15,23,42,0.10)] backdrop-blur">
           <div className="bg-gradient-to-br from-rose-50 via-white to-amber-50 px-6 py-8 sm:px-8">
@@ -200,7 +200,7 @@ function TrackOrderForm() {
           </section>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

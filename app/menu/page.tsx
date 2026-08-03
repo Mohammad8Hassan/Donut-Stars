@@ -165,7 +165,7 @@ function BuyContent() {
   const activeMeta = tabMeta.find(tab => tab.value === activeTab) ?? tabMeta[0]
 
   return (
-    <main className="relative min-h-screen overflow-hidden pb-24">
+    <div className="relative flex flex-1 flex-col overflow-hidden pb-24">
       <div className="absolute inset-0 " />
 
       {selectedBox && (
@@ -252,7 +252,7 @@ function BuyContent() {
           )}
         </div>
       </section>
-    </main>
+    </div>
   )
 }
 

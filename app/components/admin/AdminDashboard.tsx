@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import {
   ArrowRight,
   BadgeDollarSign,
+  BarChart3,
   LayoutDashboard,
   PackageCheck,
   RefreshCcw,
@@ -257,6 +258,13 @@ export default function AdminDashboard() {
                 >
                   View storefront
                   <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/admin/analytics"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-800 transition hover:-translate-y-0.5 hover:border-rose-200 hover:bg-rose-50"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  View analytics
                 </Link>
                 <button
                   // This increments a tiny reload token rather than mutating the filter,

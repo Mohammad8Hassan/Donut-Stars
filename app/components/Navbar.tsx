@@ -83,11 +83,9 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <div className="flex items-center justify-end gap-2 lg:min-w-0">
-            <ActiveOrdersStrip />
-
+          <div className="col-span-2 flex flex-wrap items-center justify-center gap-2 lg:col-span-1 lg:flex-nowrap lg:justify-end lg:min-w-0">
             {user ? (
-              <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
+              <div className="order-1 flex flex-wrap items-center justify-center gap-1.5 lg:order-2 lg:justify-end lg:min-w-0">
                 {user.roleName === 'admin' ? (
                   <Link
                     href="/admin"
@@ -117,7 +115,7 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center justify-end gap-1.5 lg:min-w-0">
+              <div className="order-1 flex flex-wrap items-center justify-center gap-1.5 lg:order-2 lg:justify-end lg:min-w-0">
                 {/* <div className="hidden items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm sm:flex">
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
                     <UserRound className="h-4 w-4" />
@@ -139,6 +137,10 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+
+            <div className="order-2 flex flex-wrap items-center justify-center gap-2 lg:order-1">
+              <ActiveOrdersStrip />
+            </div>
           </div>
         </div>
       </div>

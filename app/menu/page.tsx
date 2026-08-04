@@ -214,7 +214,7 @@ function BuyContent() {
                     </p>
                   </div>
 
-                  <TabsList className="grid h-auto w-full grid-cols-3 gap-2 rounded-[28px] border-2 border-zinc-950 bg-zinc-950 p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.16)] xl:w-[760px]">
+                  <TabsList className="-mx-4 grid h-auto w-auto grid-cols-3 gap-2 rounded-none border-2 border-zinc-950 bg-zinc-950 p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.16)] sm:mx-0 sm:w-full sm:rounded-[28px] xl:w-[760px]">
                     {tabMeta.map(tab => {
                       const Icon = tab.icon
 
@@ -224,7 +224,7 @@ function BuyContent() {
                           value={tab.value}
                           className="min-h-[44px] rounded-[22px] border border-transparent px-4 py-1.5 text-base font-black text-white/78 data-[state=active]:border-white data-[state=active]:bg-[linear-gradient(135deg,#fff8f5_0%,#ffffff_100%)] data-[state=active]:text-zinc-950 data-[state=active]:shadow-[0_12px_24px_rgba(255,255,255,0.14)]"
                         >
-                          <span className="flex flex-row items-center justify-center gap-2">
+                          <span className="flex flex-row items-center justify-center gap-1 sm:gap-2">
                             <Icon className="h-8 w-8" />
                             {tab.label}
                           </span>

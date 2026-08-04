@@ -87,7 +87,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="mt-8 px-10 sm:px-12">
+          <div className="mt-8 px-1 sm:px-12">
             <Carousel opts={{ align: "start", loop: true }} className="w-full">
               <CarouselContent className="-ml-3">
                 {highlightedDonuts.map((donut) => (
@@ -127,8 +127,8 @@ export default function Home() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-0 h-11 w-11 border-rose-200 bg-white text-zinc-900 hover:bg-rose-50" />
-              <CarouselNext className="right-0 h-11 w-11 border-rose-200 bg-white text-zinc-900 hover:bg-rose-50" />
+              <CarouselPrevious className="left-2 z-10 h-9 w-9 border-rose-200 bg-white/90 text-zinc-900 shadow-md backdrop-blur-sm hover:bg-rose-50 sm:left-0 sm:h-11 sm:w-11 sm:bg-white sm:shadow-none sm:backdrop-blur-0" />
+              <CarouselNext className="right-2 z-10 h-9 w-9 border-rose-200 bg-white/90 text-zinc-900 shadow-md backdrop-blur-sm hover:bg-rose-50 sm:right-0 sm:h-11 sm:w-11 sm:bg-white sm:shadow-none sm:backdrop-blur-0" />
             </Carousel>
           </div>
         </div>

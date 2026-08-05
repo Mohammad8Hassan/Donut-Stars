@@ -11,7 +11,7 @@ if (!CRON_SECRET) {
 console.log(`[cron] Order advancement worker started → ${BASE_URL}/api/cron/update-orders`);
 
 new CronJob(
-  "*/5 * * * * *",
+  "*/30 * * * * *",
   async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/cron/update-orders`, {

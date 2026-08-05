@@ -301,7 +301,12 @@ export default function PaymentPage(): JSX.Element {
       }
 
       dispatch(clearCart());
-      isGuest ? router.replace("/") : router.replace("/account/active-orders");
+
+      const confirmationUrl =
+        isGuest && data.orderId
+          ? `/order-confirmation?orderId=${data.orderId}&phone=${encodeURIComponent(guestAddress.phone.trim())}`
+          : `/order-confirmation?orderId=${data.orderId ?? ""}`;
+      router.replace(confirmationUrl);
     } catch (err: any) {
       console.error("Order placement error:", err);
       setError(err?.message ?? "Something went wrong.");

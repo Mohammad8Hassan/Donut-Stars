@@ -178,6 +178,7 @@ function BuyContent() {
           mode={builderMode}
           setBuilderMode={setBuilderMode}
           setSelectedBox={setSelectedBox}
+          donuts={menu.donuts}
         />
       )}
 

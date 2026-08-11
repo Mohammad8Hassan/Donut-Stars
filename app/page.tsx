@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Coffee, PackageOpen, Sparkles } from "lucide-react";
-import donutList from "@/donut-list";
 import drinksList from "@/drinks-list";
 import {
   Carousel,
@@ -11,10 +10,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import QuantitySelector from "./components/QuantitySelector";
+import { fetchMenu } from "@/lib/menu";
 
-const highlightedDonuts = donutList.slice(0, 6);
+export default async function Home() {
+  const { donuts } = await fetchMenu();
+  const highlightedDonuts = donuts.slice(0, 6);
 
-export default function Home() {
   return (
     <main className="relative overflow-hidden pb-16">
       <div className="absolute inset-x-0 top-0 h-[34rem] " />

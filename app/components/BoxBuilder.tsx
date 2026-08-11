@@ -1,7 +1,6 @@
 "use client";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import donutList from "@/donut-list";
 import {
   CircleMinus,
   CirclePlus,
@@ -24,6 +23,7 @@ interface DonutBoxModalProps {
   mode: "build" | "remove" | "edit";
   setBuilderMode: Dispatch<SetStateAction<"build" | "remove" | "edit">>;
   setSelectedBox: Dispatch<SetStateAction<ICartItem | undefined>>;
+  donuts: IItem[];
 }
 
 const formatCurrency = (value: number) =>
@@ -40,6 +40,7 @@ export default function BoxBuilder({
   mode,
   setBuilderMode,
   setSelectedBox,
+  donuts,
 }: DonutBoxModalProps) {
   const capacity = boxItem.size || 3;
   const [selected, setSelected] = useState<(IItem | null)[]>(() =>
@@ -281,7 +282,7 @@ export default function BoxBuilder({
               </div>
 
               <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto px-4 py-4 sm:grid-cols-2 sm:px-5 sm:py-5">
-                {donutList.map((donut) => (
+                {donuts.map((donut) => (
                   <button
                     key={donut.id}
                     onClick={() => handleSelect(donut)}

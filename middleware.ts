@@ -23,7 +23,13 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const secret = new TextEncoder().encode("shhhhh");
+    const secretValue = process.env.JWT_ACCESS_SECRET;
+    if (!secretValue) {
+      console.error("[middleware] JWT_ACCESS_SECRET env var is not set");
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
+
+    const secret = new TextEncoder().encode(secretValue);
     const { payload } = await jwtVerify(token, secret);
 
     if (isAdminPage(pathname) || pathname.startsWith("/api/admin/")) {

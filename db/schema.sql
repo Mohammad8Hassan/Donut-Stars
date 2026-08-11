@@ -58,6 +58,10 @@ CREATE TABLE users (
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
 
+  -- bcrypt hash of the current refresh token (see lib/auth.ts). Cleared on
+  -- logout so a copied/leaked refresh token cookie stops working.
+  refresh_token_hash VARCHAR(255) NULL,
+
   phone VARCHAR(30),
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

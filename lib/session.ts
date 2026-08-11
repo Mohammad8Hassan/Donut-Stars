@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { RowDataPacket } from "mysql2/promise";
-import { sanitizeUser, UserWithRoleRow } from "@/lib/auth";
+import { getAccessTokenSecret, sanitizeUser, UserWithRoleRow } from "@/lib/auth";
 
 export type SessionUser = {
   id: number;
@@ -30,7 +30,7 @@ export type AccessTokenPayload = {
 
 export function verifyAccessToken(token: string): AccessTokenPayload | null {
   try {
-    return jwt.verify(token, "shhhhh") as AccessTokenPayload;
+    return jwt.verify(token, getAccessTokenSecret()) as AccessTokenPayload;
   } catch {
     return null;
   }

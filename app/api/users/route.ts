@@ -8,6 +8,8 @@ export async function GET() {
     return guard.response;
   }
 
-  const [rows] = await db.query("SELECT * FROM users");
+  const [rows] = await db.query(
+    "SELECT id, name, email, phone, role_id, created_at FROM users WHERE deleted_at IS NULL"
+  );
   return NextResponse.json(rows);
 }

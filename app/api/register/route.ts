@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { db } from "@/lib/db";
-import jwt from "jsonwebtoken";
+import { signAccessToken, signRefreshToken } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -40,17 +40,9 @@ export async function POST(req: Request) {
 
     const userId = result.insertId;
 
-    const accessToken = jwt.sign(
-      { userId },
-      "shhhhh",
-      { expiresIn: "15m" }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId },
-      "shhhhhawy",
-      { expiresIn: "7d" }
-    );
+    // role_id 1 = customer (matches the INSERT above).
+    const accessToken = signAccessToken({ id: userId, roleId: 1, roleName: "customer" });
+    const refreshToken = signRefreshToken(userId);
 
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
+import { getRefreshTokenSecret } from "@/lib/auth";
 
 export async function POST() {
   const cookieStore = cookies();
@@ -11,12 +12,12 @@ export async function POST() {
     try {
       const decoded = jwt.verify(
         refreshToken,
-        "shhhhhawy"
+        getRefreshTokenSecret()
       ) as { userId: number };
 
       // Invalidate refresh token in DB
       await db.query(
-        "UPDATE users SET refresh_token = NULL WHERE id = ?",
+        "UPDATE users SET refresh_token_hash = NULL WHERE id = ?",
         [decoded.userId]
       );
     } catch {

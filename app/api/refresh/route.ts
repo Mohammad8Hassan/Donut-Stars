@@ -2,26 +2,22 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
-import { getUserWithRoleById, sanitizeUser, signAccessToken } from "@/lib/auth";
+import { getRefreshTokenSecret, getUserWithRoleById, sanitizeUser, signAccessToken } from "@/lib/auth";
 
 
 export async function POST(req: Request) {
   const cookieStore = cookies();
   const refreshToken = cookieStore.get("refreshToken")?.value;
 
-  console.log("Refresh token:", refreshToken);
-
   if (!refreshToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const decoded: any = jwt.verify(refreshToken, "shhhhhawy") as {
+    const decoded: any = jwt.verify(refreshToken, getRefreshTokenSecret()) as {
       userId: number;
     };
 
-    console.log("Decoded refresh token:", decoded);
-    
     const foundUser = await getUserWithRoleById(decoded.userId);
 
     if (!foundUser) {

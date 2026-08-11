@@ -144,10 +144,10 @@ export default async function Home() {
                 Custom boxes
               </div>
               <h2 className="mt-5 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl lg:text-5xl">
-                Build a box that's exactly what your table wants.
+                Build a box that&apos;s exactly what your table wants.
               </h2>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
-                Pick a size, then fill it with whatever mix you're craving.
+                Pick a size, then fill it with whatever mix you&apos;re craving.
                 Great for the office, a birthday, or just a Friday that
                 deserves donuts.
               </p>
@@ -201,7 +201,7 @@ export default async function Home() {
                 Add a drink, bring a box, make it an occasion.
               </h2>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-                Pair your box with a hot or iced coffee and you've got
+                Pair your box with a hot or iced coffee and you&apos;ve got
                 breakfast, a birthday, or an office treat covered in one
                 order.
               </p>
@@ -244,7 +244,7 @@ export default async function Home() {
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600 sm:text-base">
                 Behind every box is a small team of bakers and drivers who
-                show up before sunrise to make sure everything's fresh, fast,
+                show up before sunrise to make sure everything&apos;s fresh, fast,
                 and made with care — from the first proof to the last
                 delivery.
               </p>

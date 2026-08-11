@@ -2,6 +2,21 @@ import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
 import { SessionUser } from "@/lib/session";
 
+// Read at call time (not module load) so a missing env var surfaces as a
+// clear error from whichever route triggered it, instead of crashing the
+// whole server at import time.
+export function getAccessTokenSecret(): string {
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error("JWT_ACCESS_SECRET is not configured");
+  return secret;
+}
+
+export function getRefreshTokenSecret(): string {
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) throw new Error("JWT_REFRESH_SECRET is not configured");
+  return secret;
+}
+
 export type UserWithRoleRow = {
   id: number | string;
   email: string;
@@ -20,13 +35,13 @@ export function signAccessToken(user: Pick<SessionUser, "id" | "roleId" | "roleN
       roleId: user.roleId,
       roleName: user.roleName,
     },
-    "shhhhh",
+    getAccessTokenSecret(),
     { expiresIn: "15m" }
   );
 }
 
 export function signRefreshToken(userId: number) {
-  return jwt.sign({ userId }, "shhhhhawy", { expiresIn: "7d" });
+  return jwt.sign({ userId }, getRefreshTokenSecret(), { expiresIn: "7d" });
 }
 
 export function sanitizeUser(row: UserWithRoleRow): SessionUser {

@@ -81,9 +81,9 @@ export default function BoxBuilder({
       const updated = [...selected];
       updated[firstEmptyIndex] = donut;
       setSelected(updated);
-      console.log("[BoxBuilder] selected donut for box", { boxId: boxItem.id, donutId: donut.id, slot: firstEmptyIndex });
+      // console.log("[BoxBuilder] selected donut for box", { boxId: boxItem.id, donutId: donut.id, slot: firstEmptyIndex });
     } else {
-      console.log("[BoxBuilder] box full, cannot add more donuts", { boxId: boxItem.id, size: boxItem.size });
+      // console.log("[BoxBuilder] box full, cannot add more donuts", { boxId: boxItem.id, size: boxItem.size });
       alert(`All ${boxItem.size} slots are full.`);
     }
   };
@@ -93,12 +93,12 @@ export default function BoxBuilder({
     const removed = updated[index];
     updated[index] = null;
     setSelected(updated);
-    console.log("[BoxBuilder] removed donut slot", { boxId: boxItem.id, index, removedDonut: removed?.id });
+    // console.log("[BoxBuilder] removed donut slot", { boxId: boxItem.id, index, removedDonut: removed?.id });
   };
 
   const handleConfirm = () => {
     if (mode == "edit") {
-      console.log("[BoxBuilder] updating existing box contents", { boxID: boxItem.boxID, boxId: boxItem.id });
+      // console.log("[BoxBuilder] updating existing box contents", { boxID: boxItem.boxID, boxId: boxItem.id });
       dispatch(
         updateItemByBoxID({
           boxID: boxItem.boxID!,
@@ -119,7 +119,7 @@ export default function BoxBuilder({
         boxID: boxItem.boxID,
       };
 
-      console.log("[BoxBuilder] add box item to cart", payload);
+      // console.log("[BoxBuilder] add box item to cart", payload);
       dispatch(addItem(payload));
     }
   };
@@ -129,9 +129,9 @@ export default function BoxBuilder({
       handleConfirm();
       onClose();
       setSelected([]);
-      console.log("[BoxBuilder] box confirmed and modal closed", { boxId: boxItem.id });
+      // console.log("[BoxBuilder] box confirmed and modal closed", { boxId: boxItem.id });
     } else {
-      console.log("[BoxBuilder] not enough donuts selected", { boxId: boxItem.id, selected: filledCount, required: capacity });
+      // console.log("[BoxBuilder] not enough donuts selected", { boxId: boxItem.id, selected: filledCount, required: capacity });
       alert(`Please select ${capacity} donuts.`);
     }
   };
@@ -139,7 +139,7 @@ export default function BoxBuilder({
   const handleIncreaseQuantity = (item: ICartItem) => {
     if (!item.boxID) return;
     const nextQuantity = item.quantity + 1;
-    console.log("[BoxBuilder] increment existing box quantity", { boxID: item.boxID, nextQuantity });
+    // console.log("[BoxBuilder] increment existing box quantity", { boxID: item.boxID, nextQuantity });
     dispatch(
       setQuantity({
         id: item.id,
@@ -152,7 +152,7 @@ export default function BoxBuilder({
   const handleDecreaseQuantity = (item: ICartItem) => {
     if (!item.boxID || item.quantity <= 1) return;
     const nextQuantity = item.quantity - 1;
-    console.log("[BoxBuilder] decrement existing box quantity", { boxID: item.boxID, nextQuantity });
+    // console.log("[BoxBuilder] decrement existing box quantity", { boxID: item.boxID, nextQuantity });
     dispatch(
       setQuantity({
         id: item.id,
@@ -165,13 +165,13 @@ export default function BoxBuilder({
   const handleStartNewBox = () => {
     setSelectedBox({ ...boxItem, quantity: 1, boxID: crypto.randomUUID(), size: capacity });
     setBuilderMode("build");
-    console.log("[BoxBuilder] start new build flow", { boxId: boxItem.id });
+    // console.log("[BoxBuilder] start new build flow", { boxId: boxItem.id });
   };
 
   useEffect(() => {
-    console.log("[BoxBuilder] cart: ", cart);
-    console.log("[BoxBuilder] boxItem: ", boxItem);
-    console.log("[BoxBuilder] selected: ", selected);
+    // console.log("[BoxBuilder] cart: ", cart);
+    // console.log("[BoxBuilder] boxItem: ", boxItem);
+    // console.log("[BoxBuilder] selected: ", selected);
   }, [mode, boxItem, cart, selected]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -185,7 +185,7 @@ export default function BoxBuilder({
 
   const handleDelete = (item: ICartItem) => {
     if (!item.boxID) return;
-    console.log("[BoxBuilder] remove box from cart", { boxId: item.id, boxID: item.boxID });
+    // console.log("[BoxBuilder] remove box from cart", { boxId: item.id, boxID: item.boxID });
     dispatch(removeBoxItem({ boxID: item.boxID }));
   };
 

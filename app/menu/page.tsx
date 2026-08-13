@@ -59,14 +59,14 @@ function BuyContent() {
   const [selectedBox, setSelectedBox] = useState<ICartItem>()
 
   const handleBoxSelected = (boxItem: IBoxItem) => {
-    console.log('[Buy] open builder in remove mode', boxItem)
+    // console.log('[Buy] open builder in remove mode', boxItem)
     setBuilderMode('remove')
     setSelectedBox({ ...boxItem, quantity: 1 })
     setIsBuilderOpen(true)
   }
 
   const handleBoxRemoved = (boxItem: IBoxItem) => {
-    console.log('[Buy] open builder in remove mode', boxItem)
+    // console.log('[Buy] open builder in remove mode', boxItem)
     setBuilderMode('remove')
     setSelectedBox({ ...boxItem, quantity: 1 })
     setIsBuilderOpen(true)
@@ -108,7 +108,7 @@ function BuyContent() {
   }
 
   useEffect(() => {
-    console.log('[Buy] builderMode ->', builderMode)
+    // console.log('[Buy] builderMode ->', builderMode)
   }, [builderMode])
 
   useEffect(() => {
@@ -117,11 +117,11 @@ function BuyContent() {
     const loadMenu = async () => {
       try {
         setIsLoading(true)
-        console.log('[Buy] Fetching menu from /api/menu...')
+        // console.log('[Buy] Fetching menu from /api/menu...')
 
         const response = await fetch('/api/menu')
 
-        console.log('[Buy] /api/menu response status:', response.status)
+        // console.log('[Buy] /api/menu response status:', response.status)
 
         if (!response.ok) {
           const errorBody = await response.text()
@@ -130,11 +130,11 @@ function BuyContent() {
 
         const payload = (await response.json()) as MenuResponse
 
-        console.log('[Buy] Menu payload received:', {
-          donuts: payload.donuts.length,
-          drinks: payload.drinks.length,
-          boxes: payload.boxes.length,
-        })
+        // console.log('[Buy] Menu payload received:', {
+        //   donuts: payload.donuts.length,
+        //   drinks: payload.drinks.length,
+        //   boxes: payload.boxes.length,
+        // })
 
         if (isActive) {
           setMenu(payload)
@@ -150,7 +150,7 @@ function BuyContent() {
       } finally {
         if (isActive) {
           setIsLoading(false)
-          console.log('[Buy] menu fetch completed')
+          // console.log('[Buy] menu fetch completed')
         }
       }
     }

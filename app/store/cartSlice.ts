@@ -21,7 +21,7 @@ const cartSlice = createSlice({
   reducers: {
     addItem(state, action: PayloadAction<ICartItem>) {
       const item = action.payload
-      console.log("[cartSlice.addItem] payload", item)
+      // console.log("[cartSlice.addItem] payload", item)
 
       // Existing behavior (single-row by id) stays only for non-box menu items.
       // For boxes we always keep each instance separate so users can add duplicates
@@ -32,55 +32,55 @@ const cartSlice = createSlice({
 
       if (idx >= 0 && !item.boxID) {
         state.items[idx].quantity += item.quantity
-        console.log("[cartSlice.addItem] merged quantity", {
-          id: item.id,
-          newQuantity: state.items[idx].quantity
-        })
+        // console.log("[cartSlice.addItem] merged quantity", {
+        //   id: item.id,
+        //   newQuantity: state.items[idx].quantity
+        // })
       } else {
         state.items.push(item)
-        console.log("[cartSlice.addItem] inserted new item", { id: item.id, name: item.name })
+        // console.log("[cartSlice.addItem] inserted new item", { id: item.id, name: item.name })
       }
 
-      console.log("[cartSlice] cart after addItem:", JSON.stringify(state.items))
+      // console.log("[cartSlice] cart after addItem:", JSON.stringify(state.items))
     },
     updateItemByBoxID(state, action: PayloadAction<{boxID: string; updated: Partial<ICartItem>}>) {
       const {boxID, updated} = action.payload
-      console.log("[cartSlice.updateItemByBoxID] payload", action.payload)
+      // console.log("[cartSlice.updateItemByBoxID] payload", action.payload)
       const idx = state.items.findIndex(i => i.boxID == boxID)
       if(idx >= 0) {
         state.items[idx] = {
           ...state.items[idx],
           ...updated
         }
-        console.log("[cartSlice] cart after updateItemByBoxID:", state.items)
+        // console.log("[cartSlice] cart after updateItemByBoxID:", state.items)
       } else {
         console.warn(`No item found with boxID ${boxID}`)
       }
     },
     removeItem(state, action: PayloadAction<{ id: string }>) {
-      console.log("[cartSlice.removeItem] payload", action.payload)
+      // console.log("[cartSlice.removeItem] payload", action.payload)
       state.items = state.items.filter(
         i => !(i.id === action.payload.id)
       )
-      console.log("[cartSlice] cart after removeItem:", state.items)
+      // console.log("[cartSlice] cart after removeItem:", state.items)
     },
     removeBoxItem(state, action: PayloadAction<{ boxID: string }>) {
-      console.log("[cartSlice.removeBoxItem] payload", action.payload)
+      // console.log("[cartSlice.removeBoxItem] payload", action.payload)
       // Remove only the exact box instance, not every box of same size.
       state.items = state.items.filter(
         i => !(i.boxID === action.payload.boxID)
       )
-      console.log("[cartSlice] cart after removeBoxItem:", state.items)
+      // console.log("[cartSlice] cart after removeBoxItem:", state.items)
     },
     removeStrays(state) {
       state.items = state.items.filter(
         i => (i.boxID)
       )
-      console.log("[cartSlice.removeStrays] cart cleaned:", state.items)
+      // console.log("[cartSlice.removeStrays] cart cleaned:", state.items)
     },
     setQuantity(state, action: PayloadAction<{ id: string; quantity: number; boxID?: string; options?: Record<string, string> }>) {
       const { id, quantity, boxID } = action.payload
-      console.log("[cartSlice.setQuantity] payload", action.payload)
+      // console.log("[cartSlice.setQuantity] payload", action.payload)
 
       // For normal items, target by id. For boxes, target by unique boxID.
       const idx = typeof boxID === 'string'
@@ -89,23 +89,23 @@ const cartSlice = createSlice({
 
       if (idx >= 0) {
         if (quantity <= 0) {
-          console.log("[cartSlice.setQuantity] removing because quantity <= 0", { id })
+          // console.log("[cartSlice.setQuantity] removing because quantity <= 0", { id })
           state.items.splice(idx, 1)
         } else {
           state.items[idx].quantity = quantity
-          console.log("[cartSlice.setQuantity] updated quantity", { id, newQuantity: quantity })
+          // console.log("[cartSlice.setQuantity] updated quantity", { id, newQuantity: quantity })
         }
       } else {
         console.warn("[cartSlice.setQuantity] item not found", { id })
       }
-      console.log("[cartSlice] cart after setQuantity:", state.items)
+      // console.log("[cartSlice] cart after setQuantity:", state.items)
     },
     clearCart(state) {
       state.items = []
-      console.log("[cartSlice.clearCart] cart emptied")
+      // console.log("[cartSlice.clearCart] cart emptied")
     },
     hydrate(state, action: PayloadAction<CartState>) {
-      console.log("[cartSlice.hydrate] loading saved cart", action.payload)
+      // console.log("[cartSlice.hydrate] loading saved cart", action.payload)
       return action.payload
     },
   },

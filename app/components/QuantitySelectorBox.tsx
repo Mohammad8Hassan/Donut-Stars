@@ -25,12 +25,12 @@ export default function QuantitySelectorBox({ item, handleBoxSelected, handleBox
 
   useEffect(() => {
     const existsInCart = cart.some(x => x.id == item.id)
-    console.log('[QuantitySelectorBox] cart sync', { id: item.id, inCart: existsInCart, count })
+    // console.log('[QuantitySelectorBox] cart sync', { id: item.id, inCart: existsInCart, count })
     setInCart(existsInCart)
   }, [cart, item.id, count])
 
   const handleSelect = (selectedItem: IBoxItem) => {
-    console.log('[QuantitySelectorBox] add flow', selectedItem)
+    // console.log('[QuantitySelectorBox] add flow', selectedItem)
     handleBoxSelected(selectedItem)
   }
 

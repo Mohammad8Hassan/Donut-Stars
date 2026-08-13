@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Coffee, PackageOpen, Sparkles } from "lucide-react";
-import drinksList from "@/drinks-list";
 import {
   Carousel,
   CarouselContent,
@@ -11,10 +10,19 @@ import {
 } from "@/components/ui/carousel";
 import QuantitySelector from "./components/QuantitySelector";
 import { fetchMenu } from "@/lib/menu";
+import { IItem } from "@/types";
+
+// Homepage "drinks and occasions" teaser only has room for two sample
+// drinks — pinned to these specific DB products rather than an arbitrary
+// slice of the category.
+const FEATURED_DRINK_IDS = ["13", "9"];
 
 export default async function Home() {
-  const { donuts } = await fetchMenu();
-  const highlightedDonuts = donuts.slice(0, 6);
+  const { donuts, drinks } = await fetchMenu();
+  const highlightedDonuts = donuts.filter((donut) => donut.tags && donut.tags.length > 0).slice(0, 6);
+  const featuredDrinks = FEATURED_DRINK_IDS.map((id) =>
+    drinks.find((drink) => drink.id === id)
+  ).filter((drink): drink is IItem => Boolean(drink));
 
   return (
     <main className="relative overflow-hidden pb-16">
@@ -99,11 +107,13 @@ export default async function Home() {
                     <article className="group relative flex h-full flex-col rounded-[32px] border bg-[linear-gradient(180deg,#ffffff_0%,#fff8f6_100%)] p-5 transition duration-200 border-rose-200 ">
                       {/* <div className="absolute inset-x-6 top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.16),transparent_72%)] opacity-0 transition duration-300 group-hover:opacity-100" /> */}
 
-                      <div className="relative flex items-center justify-between gap-3">
-                        <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500 transition duration-300 group-hover:border-rose-300 group-hover:bg-white">
-                          {donut.tags?.[0] ?? "Signature"}
-                        </span>
-                      </div>
+                      {donut.tags?.[0] && (
+                        <div className="relative flex items-center justify-between gap-3">
+                          <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500 transition duration-300 group-hover:border-rose-300 group-hover:bg-white">
+                            {donut.tags[0]}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="relative mt-4 h-64 overflow-hidden rounded-[30px] bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.12),transparent_58%)] transition duration-300 group-hover:bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.18),transparent_62%)] sm:h-72">
                         <Image
@@ -184,8 +194,8 @@ export default async function Home() {
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="relative order-2 min-h-[320px] lg:order-1 lg:min-h-[500px]">
               <Image
-                src="/landing/birthday.jpg"
-                alt="Donuts for celebration"
+                src="/caramelFrappe.jpg"
+                alt="Iced caramel frappe"
                 fill
                 className="object-cover"
               />
@@ -207,7 +217,7 @@ export default async function Home() {
               </p>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {drinksList.map((drink) => (
+                {featuredDrinks.map((drink) => (
                   <div
                     key={drink.id}
                     className="rounded-[24px] border border-white/10 bg-white/5 p-4"

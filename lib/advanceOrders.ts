@@ -20,7 +20,7 @@ export async function advanceOrders(): Promise<AdvanceResult> {
       AND delivery_due_at <= NOW()
   `);
 
-  console.log(`[cron] advanced ${delivResult?.affectedRows ?? 0} orders to completed`);
+  // console.log(`[cron] advanced ${delivResult?.affectedRows ?? 0} orders to completed`);
 
   // Then move preparing orders to out_for_delivery. These will be eligible
   // for completion no earlier than the next cron tick.
@@ -34,7 +34,7 @@ export async function advanceOrders(): Promise<AdvanceResult> {
       AND ready_at <= NOW()
   `);
 
-  console.log(`[cron] advanced ${prepResult?.affectedRows ?? 0} orders to out_for_delivery`);
+  // console.log(`[cron] advanced ${prepResult?.affectedRows ?? 0} orders to out_for_delivery`);
 
   return {
     advancedToCompleted:      Number(delivResult?.affectedRows ?? 0),

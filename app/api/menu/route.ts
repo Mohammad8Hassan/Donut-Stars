@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { fetchMenu } from "@/lib/menu";
 
 export async function GET() {
-  console.log("[GET /api/menu] Starting menu fetch from DB");
+  // console.log("[GET /api/menu] Starting menu fetch from DB");
 
   try {
     const menu = await fetchMenu();
 
-    console.log(
-      "[GET /api/menu] Menu payload prepared:",
-      { donuts: menu.donuts.length, drinks: menu.drinks.length, boxes: menu.boxes.length }
-    );
+    // console.log(
+    //   "[GET /api/menu] Menu payload prepared:",
+    //   { donuts: menu.donuts.length, drinks: menu.drinks.length, boxes: menu.boxes.length }
+    // );
 
     return NextResponse.json(menu);
   } catch (error) {

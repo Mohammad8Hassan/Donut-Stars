@@ -47,30 +47,35 @@ export default function AccountDetailsPage() {
 
     setSaving(true);
 
-    const response = await fetch("/api/account/update", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: user!.id,
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-      }),
-    });
+    try {
+      const response = await fetch("/api/account/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: user!.id,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+        }),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setSaveMessage("We couldn't save your changes. Please try again.");
+        return;
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      setSaveMessage("Your account details were updated.");
+    } catch {
+      // Network failure, malformed response, etc. — still surface an error
+      // instead of leaving the button silently stuck disabled below.
       setSaveMessage("We couldn't save your changes. Please try again.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const data = await response.json();
-    setUser(data.user);
-
-    setSaving(false);
-    setSaveMessage("Your account details were updated.");
   };
 
   if (!user) {

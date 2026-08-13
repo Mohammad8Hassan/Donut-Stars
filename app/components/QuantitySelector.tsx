@@ -17,7 +17,7 @@ export default function QuantitySelector({ item }: QuantitySelectorType) {
   const [inCart, setInCart] = useState(cart.some(x => x.id == item.id))
 
   const handleSet = (item: IItem, quantity: number) => {
-    console.log('[QuantitySelector] setQuantity click', { id: item.id, name: item.name, nextQuantity: quantity })
+    // console.log('[QuantitySelector] setQuantity click', { id: item.id, name: item.name, nextQuantity: quantity })
     dispatch(
       setQuantity({
         id: item.id,
@@ -35,12 +35,12 @@ export default function QuantitySelector({ item }: QuantitySelectorType) {
 
   useEffect(() => {
     const existsInCart = cart.some(x => x.id == item.id)
-    console.log('[QuantitySelector] cart sync', { id: item.id, inCart: existsInCart, quantity: count })
+    // console.log('[QuantitySelector] cart sync', { id: item.id, inCart: existsInCart, quantity: count })
     setInCart(existsInCart)
   }, [cart, item.id, count])
 
   const handleSelect = (item: IItem) => {
-    console.log('[QuantitySelector] addItem click', item)
+    // console.log('[QuantitySelector] addItem click', item)
     dispatch(
       addItem({
         id: item.id,

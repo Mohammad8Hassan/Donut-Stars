@@ -72,7 +72,7 @@ function OrderCard({ entry, expandable }: { entry: ActiveOrderEntry; expandable:
   return (
     <Link
       href={entry.href}
-      className={`flex items-center gap-2.5 rounded-full border px-3 py-2 transition hover:-translate-y-0.5 ${getAccentClasses(entry.status)}`}
+      className={`flex items-center gap-2.5 rounded-full border px-[0.5] py-[0.5] transition hover:-translate-y-0.5 ${getAccentClasses(entry.status)}`}
     >
       <OrderStatusAnimation status={entry.status} size="lg" />
       <div className="flex flex-col leading-tight">

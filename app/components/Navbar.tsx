@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, LogOut, UserRound } from 'lucide-react'
 import logo from '@/public/logo.png'
@@ -14,6 +15,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { scrolled } = useScroll()
   const { user, checked, setUser } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   // /track is the guest-only lookup tool — once we're sure someone is
   // logged in, they have app/account/active-orders instead. Stays visible
@@ -21,6 +23,11 @@ export default function Navbar() {
   const visibleNavItems = navItems.filter((item) => item.url !== '/track' || !(checked && user))
 
   const handleLogOut = async () => {
+    // Guard against rapid repeated clicks firing multiple concurrent
+    // /api/logout requests before the button's disabled state re-renders.
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
     try {
       const res = await fetch('/api/logout', {
         method: 'POST',
@@ -34,6 +41,8 @@ export default function Navbar() {
       }
     } catch (error) {
       console.error('Error logging out:', error)
+    } finally {
+      setIsLoggingOut(false)
     }
   }
 
@@ -108,10 +117,11 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogOut}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
+                  disabled={isLoggingOut}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:h-10"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Logout</span>
+                  <span className="hidden sm:inline">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
                 </button>
               </div>
             ) : (

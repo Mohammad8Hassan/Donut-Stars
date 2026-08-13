@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         isLoadingRef.current = true;
         setIsLoading(true);
-        console.log("Revalidating auth...");
+        // console.log("Revalidating auth...");
         try {
             let res = await fetch("/api/me", {
                 credentials: "include", // sends the HttpOnly access-token cookie

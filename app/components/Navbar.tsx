@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, LogOut, UserRound } from 'lucide-react'
+import { LogOut, UserRound } from 'lucide-react'
 import logo from '@/public/logo.png'
 import { useAuth } from '../context/useAuth'
 import { useScroll } from './ScrollProvider'
@@ -94,34 +94,50 @@ export default function Navbar() {
 
           <div className="col-span-2 flex flex-wrap items-center justify-center gap-2 lg:col-span-1 lg:flex-nowrap lg:justify-end lg:min-w-0">
             {user ? (
-              <div className="order-1 flex flex-wrap items-center justify-center gap-1.5 lg:order-2 lg:justify-end lg:min-w-0">
-                {user.roleName === 'admin' ? (
-                  <Link
-                    href="/admin"
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-rose-100 sm:h-10"
-                  >
-                    <LayoutDashboard className="h-4 w-4 text-rose-500" />
-                    <span className="hidden sm:inline">Admin</span>
-                  </Link>
-                ) : null}
-
+              <div
+                className="order-1 flex flex-wrap items-center justify-center gap-1.5 lg:order-2 lg:flex-nowrap
+                  lg:justify-end lg:gap-1.5 lg:rounded-2xl lg:border lg:border-white/70 lg:bg-white/60 lg:py-1.5
+                  lg:pl-2 lg:pr-1.5 lg:shadow-sm lg:transition lg:hover:border-rose-200 lg:hover:bg-white/80 lg:min-w-0"
+              >
                 <Link
                   href="/account"
-                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5 shadow-sm transition hover:border-rose-200 hover:bg-white/80"
+                  className="flex min-w-0 items-center gap-2 rounded-2xl border border-white/70 bg-white/60 px-2 py-1.5
+                    shadow-sm transition hover:border-rose-200 hover:bg-white/80 lg:order-1 lg:rounded-none lg:border-0
+                    lg:bg-transparent lg:px-1 lg:py-0 lg:shadow-none lg:transition-none lg:hover:border-0 lg:hover:bg-transparent"
                 >
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-[0_10px_20px_rgba(244,63,94,0.18)] sm:h-8 sm:w-8">
                     <UserRound className="h-4 w-4" />
                   </div>
-                  <p className="max-w-[120px] truncate text-sm font-semibold text-zinc-900 sm:max-w-[180px]">{user.email}</p>
+                  <p className="max-w-[120px] truncate text-sm font-semibold text-zinc-900 sm:max-w-[180px]">{user.name}</p>
                 </Link>
+
+                <div className="hidden h-6 w-px bg-zinc-200 lg:order-2 lg:block" />
+
+                {user.roleName === 'admin' ? (
+                  <Link
+                    href="/admin"
+                    title="Admin dashboard"
+                    className="inline-flex h-9 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50
+                      px-3 text-sm font-semibold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-rose-100 sm:h-10
+                      lg:order-3 lg:h-8 lg:w-auto lg:rounded-xl lg:border-0 lg:bg-transparent lg:px-2.5 lg:text-rose-500
+                      lg:shadow-none lg:hover:translate-y-0 lg:hover:bg-rose-50"
+                  >
+                    Admin
+                  </Link>
+                ) : null}
 
                 <button
                   onClick={handleLogOut}
                   disabled={isLoggingOut}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 sm:h-10"
+                  title="Logout"
+                  aria-label={isLoggingOut ? 'Logging out' : 'Logout'}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-2xl bg-zinc-950 px-3 text-sm font-semibold
+                    text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 disabled:cursor-not-allowed
+                    disabled:opacity-60 disabled:hover:translate-y-0 sm:h-10 lg:order-4 lg:h-8 lg:w-8 lg:rounded-xl
+                    lg:bg-transparent lg:p-0 lg:text-zinc-500 lg:hover:translate-y-0 lg:hover:bg-zinc-950 lg:hover:text-white"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+                  <span className="hidden sm:inline lg:hidden">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
                 </button>
               </div>
             ) : (

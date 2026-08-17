@@ -7,6 +7,12 @@ import {
   signAccessToken,
   signRefreshToken,
 } from "@/lib/auth";
+import { checkRateLimit, getClientIp, resetRateLimit } from "@/lib/rateLimit";
+
+// 5 attempts per 15 minutes per IP+email — generous enough to absorb typos,
+// tight enough to make scripted password guessing impractical.
+const LOGIN_ATTEMPT_LIMIT = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +22,19 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Email and password required" },
         { status: 400 }
+      );
+    }
+
+    // Keyed by IP+email (not IP alone) so one attacker guessing many
+    // passwords against a single known account is capped, without letting
+    // a shared IP (office wifi, NAT) lock out logins to unrelated accounts.
+    const rateLimitKey = `login:${getClientIp(req)}:${String(email).toLowerCase()}`;
+    const rateLimit = checkRateLimit(rateLimitKey, LOGIN_ATTEMPT_LIMIT, LOGIN_WINDOW_MS);
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
       );
     }
 
@@ -43,6 +62,10 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+
+    // Successful login — clear this key's failed-attempt count so a user
+    // who mistyped their password a few times isn't left in a cooldown.
+    resetRateLimit(rateLimitKey);
 
     const sessionUser = sanitizeUser(foundUser);
     const accessToken = signAccessToken(sessionUser);

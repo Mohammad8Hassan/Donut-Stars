@@ -68,21 +68,54 @@ function GuestOrderStatusFetcher({
   return null;
 }
 
-function OrderCard({ entry, expandable }: { entry: ActiveOrderEntry; expandable: boolean }) {
+// The pill is a Link (navigate to the primary order) with the chevron as a
+// separate sibling button rather than nested inside the Link — desktop opens
+// the "other active orders" dropdown via CSS group-hover, but there's no
+// hover on mobile, so the chevron needs its own tap target that toggles the
+// dropdown (`onToggleExpand`) without also triggering navigation. The
+// group-hover classes are wrapped in `[@media(hover:hover)]:` so they're
+// inert on touch devices — otherwise tapping the chevron satisfies `:hover`
+// ("sticky hover"), and that leftover hover match keeps the dropdown visible
+// even after `expanded` flips back to false on the second tap.
+function OrderCard({
+  entry,
+  expandable,
+  expanded,
+  onToggleExpand,
+}: {
+  entry: ActiveOrderEntry;
+  expandable: boolean;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+}) {
   return (
-    <Link
-      href={entry.href}
-      className={`flex items-center gap-2.5 rounded-full border px-[0.5] py-[0.5] transition hover:-translate-y-0.5 ${getAccentClasses(entry.status)}`}
+    <div
+      className={`flex items-center gap-1 rounded-full border py-[0.5] pl-3 pr-1.5 transition hover:-translate-y-0.5 ${getAccentClasses(entry.status)}`}
     >
-      <OrderStatusAnimation status={entry.status} size="lg" />
-      <div className="flex flex-col leading-tight">
-        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-          Order No. {entry.orderId}
-        </span>
-        <span className="text-sm font-black text-zinc-900 sm:text-base">{getStatusLabel(entry.status)}</span>
-      </div>
-      {expandable && <ChevronDown className="ml-0.5 h-4 w-4 shrink-0 text-zinc-400 transition group-hover:rotate-180" />}
-    </Link>
+      <Link href={entry.href} className="flex items-center gap-2">
+        <OrderStatusAnimation status={entry.status} size="lg" />
+        <div className="flex flex-col leading-tight">
+          <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+            Order No. {entry.orderId}
+          </span>
+          <span className="text-sm font-black text-zinc-900 sm:text-base">{getStatusLabel(entry.status)}</span>
+        </div>
+      </Link>
+      {expandable && (
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          aria-label="View other active orders"
+          aria-haspopup="true"
+          aria-expanded={expanded}
+          className="ml-0.5 shrink-0 rounded-full p-1.5 text-zinc-400 transition hover:bg-black/5 hover:text-zinc-600"
+        >
+          <ChevronDown
+            className={`h-4 w-4 transition [@media(hover:hover)]:group-hover:rotate-180 ${expanded ? "rotate-180" : ""}`}
+          />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -161,6 +194,34 @@ export default function ActiveOrdersStrip() {
   }
 
   const [primary, ...rest] = entries;
+  const hasRest = rest.length > 0;
+
+  // Mirrors desktop's hover-to-open dropdown for mobile, where there's no
+  // hover: the chevron button toggles `expanded`, and a tap anywhere outside
+  // the pill closes it again (there's no hover-out to fall back on).
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!hasRest) setExpanded(false);
+  }, [hasRest]);
+
+  useEffect(() => {
+    if (!expanded) return;
+
+    function handleOutsideTap(event: MouseEvent | TouchEvent) {
+      if (stripRef.current && !stripRef.current.contains(event.target as Node)) {
+        setExpanded(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideTap);
+    document.addEventListener("touchstart", handleOutsideTap);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideTap);
+      document.removeEventListener("touchstart", handleOutsideTap);
+    };
+  }, [expanded]);
 
   return (
     <>
@@ -175,14 +236,21 @@ export default function ActiveOrdersStrip() {
         ))}
 
       {primary && (
-        <div className="group relative">
-          <OrderCard entry={primary} expandable={rest.length > 0} />
+        <div ref={stripRef} className="group relative">
+          <OrderCard
+            entry={primary}
+            expandable={hasRest}
+            expanded={expanded}
+            onToggleExpand={() => setExpanded((current) => !current)}
+          />
 
-          {rest.length > 0 && (
+          {hasRest && (
             <div
-              className="invisible absolute right-0 top-full z-10 mt-2 w-64 origin-top-right rounded-2xl border
-                border-zinc-200 bg-white/95 p-2 opacity-0 shadow-[0_20px_45px_rgba(15,23,42,0.16)] backdrop-blur
-                transition-all duration-150 group-hover:visible group-hover:opacity-100"
+              className={`absolute right-0 top-full z-10 mt-2 w-64 origin-top-right rounded-2xl border
+                border-zinc-200 bg-white/95 p-2 shadow-[0_20px_45px_rgba(15,23,42,0.16)] backdrop-blur
+                transition-all duration-150 [@media(hover:hover)]:group-hover:visible
+                [@media(hover:hover)]:group-hover:opacity-100
+                ${expanded ? "visible opacity-100" : "invisible opacity-0"}`}
             >
               <p className="px-2 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
                 Other active orders
@@ -191,6 +259,7 @@ export default function ActiveOrdersStrip() {
                 <Link
                   key={entry.key}
                   href={entry.href}
+                  onClick={() => setExpanded(false)}
                   className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-rose-50"
                 >
                   <OrderStatusAnimation status={entry.status} size="sm" />

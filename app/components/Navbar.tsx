@@ -56,7 +56,7 @@ export default function Navbar() {
             : 'border-rose-100 bg-gradient-to-r from-white/95 via-rose-50/95 to-amber-50/95 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md'
         }`}
       >
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2 px-2.5 py-2 sm:px-3 sm:py-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-y-0.5 px-2.5 py-2 sm:px-3 sm:py-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
             {visibleNavItems.map((item) => {
               const isActive =

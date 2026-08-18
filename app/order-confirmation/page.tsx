@@ -270,13 +270,13 @@ function OrderConfirmationContent() {
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={trackHref}
-                  className="inline-flex h-11 flex-1 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400"
+                  className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-2xl bg-rose-500 px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-400 sm:h-11 sm:min-h-0"
                 >
                   {isGuest ? "Track this order" : "View active orders"}
                 </Link>
                 <Link
                   href="/menu"
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 px-5 text-sm font-semibold text-white transition hover:bg-white/10 sm:h-11 sm:min-h-0"
                 >
                   <ShoppingBag className="h-4 w-4" />
                   Keep Shopping

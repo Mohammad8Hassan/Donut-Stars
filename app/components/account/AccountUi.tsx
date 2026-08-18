@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import {
   ChevronRight,
   Lock,
   MapPin,
+  Menu,
   PackageCheck,
   Settings2,
   Truck,
   UserRound,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/app/context/useAuth";
 
@@ -67,6 +70,14 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const initials = getInitials(user?.name, user?.email);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const activeNavItem = accountNavItems.find((item) => item.href === pathname);
+
+  // Collapse the mobile menu whenever the route changes so it doesn't
+  // stay open after the user taps into a section.
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
 
   return (
     <div className="relative isolate flex flex-1 flex-col overflow-hidden items-stretch">
@@ -78,7 +89,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-base font-black tracking-[0.12em] text-white ring-1 ring-white/15">
                   {initials}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-200">
                     Donut Stars account
                   </p>
@@ -88,6 +99,28 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   <p className="truncate text-xs text-white/75">{user?.email}</p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen((open) => !open)}
+                aria-expanded={mobileNavOpen}
+                aria-controls="account-mobile-nav"
+                className="mt-3 flex w-full items-center justify-between gap-2 rounded-2xl border border-white/15 bg-white/5 px-3 py-2.5 text-left transition hover:border-white/25 hover:bg-white/10 lg:hidden"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-500 text-white">
+                    {activeNavItem?.icon ?? <Settings2 className="h-4 w-4" />}
+                  </span>
+                  <span className="truncate text-sm font-semibold text-white">
+                    {activeNavItem?.label ?? "Account menu"}
+                  </span>
+                </span>
+                {mobileNavOpen ? (
+                  <X className="h-5 w-5 shrink-0 text-white/80" />
+                ) : (
+                  <Menu className="h-5 w-5 shrink-0 text-white/80" />
+                )}
+              </button>
 
               {/* <div className="mt-3 hidden rounded-2xl border border-white/15 bg-white/5 px-3 py-2 sm:block">
                 <div className="flex items-center gap-2 text-rose-200">
@@ -100,7 +133,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
               </div> */}
             </div>
 
-            <nav className="flex-1 space-y-1.5 p-3">
+            <nav
+              id="account-mobile-nav"
+              className={`flex-1 space-y-1.5 p-3 lg:block ${mobileNavOpen ? "" : "hidden"}`}
+            >
               {accountNavItems.map((item) => {
                 const isActive = pathname === item.href;
 

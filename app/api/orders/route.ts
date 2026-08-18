@@ -429,8 +429,8 @@ export async function POST(req: Request) {
     const orderStatus = "preparing";
 
 
-    const preparingMins = 0.3; // 18 seconds
-    const deliveryMins = 10.5;
+    const preparingMins = 1; // 1 minute
+    const deliveryMins = 8;
     // MySQL's DATE_ADD rounds fractional MINUTE intervals to the nearest whole
     // minute (0.5 -> 1), so convert to whole seconds before building the SQL.
     const preparingSecs = Math.round(preparingMins * 60);

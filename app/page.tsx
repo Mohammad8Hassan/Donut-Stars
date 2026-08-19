@@ -39,7 +39,7 @@ export default async function Home() {
       <div className="absolute inset-x-0 top-0 h-[34rem] " />
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-6 pt-2 sm:px-6 lg:px-8 lg:pb-8">
-        <div className="relative min-h-[72vh] overflow-hidden rounded-[40px] border border-rose-100 bg-zinc-950 shadow-[0_30px_80px_rgba(15,23,42,0.16)]">
+        <div className="relative min-h-[72vh] overflow-hidden rounded-[40px] border border-rose-200 bg-zinc-950 shadow-[0_30px_80px_rgba(15,23,42,0.16)]">
           <Image
             src="/landing/freshwindow.jpg"
             alt="Fresh donuts in the display"
@@ -59,9 +59,9 @@ export default async function Home() {
               Handcrafted donuts, made fresh and delivered warm.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
-              From classic glazed to our seasonal specials, every donut is
-              made from scratch each morning using real butter, real fruit,
-              and no shortcuts.
+              From bestseller classics to fruit-topped favorites, every donut
+              is made from scratch each morning and delivered warm to your
+              door.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -81,19 +81,18 @@ export default async function Home() {
       </section>
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
+        <div className="overflow-hidden rounded-[40px] border border-rose-200 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">
                 Top picks
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-950 sm:text-4xl">
-                Customer favorites, fresh out of the case.
+                Customer favorites, baked fresh today.
               </h2>
               <p className="mt-3 text-sm leading-6 text-zinc-600 sm:text-base">
                 These are the donuts our regulars keep coming back for, from
-                the classics to a few flavors that only stick around for a
-                season.
+                the classics to our fruit-topped bestsellers.
               </p>
             </div>
 
@@ -156,7 +155,7 @@ export default async function Home() {
       </section>
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-white shadow-[0_26px_60px_rgba(15,23,42,0.10)]">
+        <div className="overflow-hidden rounded-[40px] border border-rose-200 bg-white shadow-[0_26px_60px_rgba(15,23,42,0.10)]">
           <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-12">
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-500">
@@ -200,7 +199,7 @@ export default async function Home() {
       </section>
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[40px] border border-rose-100 bg-zinc-950 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
+        <div className="overflow-hidden rounded-[40px] border border-rose-200 bg-zinc-950 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="relative order-2 min-h-[320px] lg:order-1 lg:min-h-[500px]">
               <Image
@@ -253,7 +252,7 @@ export default async function Home() {
       </section>
 
       <section className="relative mx-auto w-full max-w-[1400px] px-4 pt-6 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[40px] border border-rose-100 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_45%,#fff7ed_100%)] shadow-[0_28px_70px_rgba(15,23,42,0.10)]">
+        <div className="relative overflow-hidden rounded-[40px] border border-rose-200 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_45%,#fff7ed_100%)] shadow-[0_28px_70px_rgba(15,23,42,0.10)]">
           <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="flex flex-col justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-500">

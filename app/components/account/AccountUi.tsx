@@ -90,9 +90,9 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-200">
+                  {/* <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-200">
                     Donut Stars account
-                  </p>
+                  </p> */}
                   <h1 className="mt-1 truncate text-lg font-black leading-tight tracking-tight">
                     {user?.name || "Your account"}
                   </h1>

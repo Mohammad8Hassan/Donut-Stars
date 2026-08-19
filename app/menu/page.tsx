@@ -208,7 +208,7 @@ function BuyContent() {
                 <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
                   <div className="max-w-3xl">
                     <h1 className="text-lg font-black tracking-tight text-zinc-950 sm:text-xl">
-                      Order Menu
+                      Menu
                     </h1>
                     <p className="hidden text-xs leading-4 text-zinc-600 sm:block">
                       {activeMeta.description}

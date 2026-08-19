@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "../context/useAuth";
+import { PageLoader } from "./PageLoader";
 
 export function Protected({
   children,
@@ -22,7 +23,7 @@ export function Protected({
   }, [user, checked, isLoading, revalidate]);
 
   if (!checked || isLoading) {
-    return <div>Loading...</div>;
+    return <PageLoader />;
   }
 
   if (!user) {

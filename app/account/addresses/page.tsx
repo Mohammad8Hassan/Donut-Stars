@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { authFetch } from "@/app/api/authFetch";
 import { AccountCard, AccountInput, AccountSectionHeading } from "@/app/components/account/AccountUi";
+import { PageLoader } from "@/app/components/PageLoader";
 
 export interface Address {
   id: number;
@@ -306,7 +307,7 @@ export default function AddressesPage() {
         </div>
 
         <div className="mt-4 flex flex-col gap-3">
-          {loading ? <p className="text-sm text-zinc-500">Loading...</p> : null}
+          {loading ? <PageLoader title="Loading addresses" /> : null}
           {!loading && listError ? <p className="text-sm text-rose-600">{listError}</p> : null}
 
           {!loading && addresses.length === 0 ? (

@@ -2,9 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { LogOut, UserRound } from 'lucide-react'
+import { LogOut, Menu, UserRound, X } from 'lucide-react'
 import logo from '@/public/logo.png'
 import { useAuth } from '../context/useAuth'
 import { useScroll } from './ScrollProvider'
@@ -16,11 +16,42 @@ export default function Navbar() {
   const { scrolled } = useScroll()
   const { user, checked, setUser } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
 
   // /track is the guest-only lookup tool — once we're sure someone is
   // logged in, they have app/account/active-orders instead. Stays visible
   // until `checked` resolves so guests never see it disappear-then-flash.
   const visibleNavItems = navItems.filter((item) => item.url !== '/track' || !(checked && user))
+
+  const isNavItemActive = (url: string) =>
+    url === '/' ? pathname === url : pathname === url || pathname.startsWith(`${url}/`)
+
+  const navLinkClassName = (isActive: boolean) =>
+    isActive
+      ? 'border-rose-200 bg-rose-100 text-zinc-950 shadow-[0_10px_20px_rgba(244,63,94,0.12)]'
+      : 'border-white/70 bg-white/70 text-zinc-800 hover:border-rose-200 hover:bg-rose-50 hover:text-zinc-950'
+
+  const activeNavItem = visibleNavItems.find((item) => isNavItemActive(item.url))
+
+  // Collapse the mobile nav dropdown on navigation and on outside clicks —
+  // it's an inline panel, not a full-screen overlay, so nothing else closes it.
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [mobileMenuOpen])
 
   const handleLogOut = async () => {
     // Guard against rapid repeated clicks firing multiple concurrent
@@ -47,7 +78,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="pointer-events-none sticky top-0 z-[1100] bg-transparent px-3 pt-2 sm:px-5 sm:pt-3">
+    <header ref={headerRef} className="pointer-events-none sticky top-0 z-[1100] bg-transparent px-3 pt-2 sm:px-5 sm:pt-3">
       <div
         id="navBar"
         className={`pointer-events-auto mx-auto w-full max-w-[1400px] rounded-[24px] border transition-all duration-300 ${
@@ -57,27 +88,31 @@ export default function Navbar() {
         }`}
       >
         <div className="grid grid-cols-[1fr_auto] items-center gap-y-0.5 px-2.5 py-2 sm:px-3 sm:py-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {visibleNavItems.map((item) => {
-              const isActive =
-                item.url === '/'
-                  ? pathname === item.url
-                  : pathname === item.url || pathname.startsWith(`${item.url}/`)
-
-              return (
+          <div className="flex items-center gap-1.5">
+            <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
+              {visibleNavItems.map((item) => (
                 <Link
                   key={item.url}
                   href={item.url}
-                  className={`rounded-xl border px-2.5 py-1.5 text-sm font-semibold leading-none transition-all duration-200 sm:px-3 sm:py-2 ${
-                    isActive
-                      ? 'border-rose-200 bg-rose-100 text-zinc-950 shadow-[0_10px_20px_rgba(244,63,94,0.12)]'
-                      : 'border-white/70 bg-white/70 text-zinc-800 hover:border-rose-200 hover:bg-rose-50 hover:text-zinc-950'
-                  }`}
+                  className={`rounded-xl border px-2.5 py-1.5 text-sm font-semibold leading-none transition-all duration-200 sm:px-3 sm:py-2 ${navLinkClassName(
+                    isNavItemActive(item.url)
+                  )}`}
                 >
                   {item.name}
                 </Link>
-              )
-            })}
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-panel"
+              className="flex h-9 items-center gap-2 rounded-xl border border-white/70 bg-white/70 px-2.5 text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50 hover:text-zinc-950 sm:hidden"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5 shrink-0" /> : <Menu className="h-5 w-5 shrink-0" />}
+              <span className="max-w-[9rem] truncate text-sm font-semibold">{activeNavItem?.name ?? 'Menu'}</span>
+            </button>
           </div>
 
           <Link
@@ -151,13 +186,13 @@ export default function Navbar() {
 
                 <Link
                   href="/login"
-                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-white/70 bg-white/70 px-3 text-sm font-semibold text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50 sm:h-10"
+                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 sm:h-10"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex h-9 items-center justify-center rounded-2xl bg-zinc-950 px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-500 sm:h-10"
+                  className="inline-flex h-9 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-3 text-sm font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 sm:h-10"
                 >
                   Sign Up
                 </Link>
@@ -169,6 +204,22 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+
+        {mobileMenuOpen ? (
+          <div id="mobile-nav-panel" className="flex flex-col gap-1.5 border-t border-rose-100/70 px-2.5 pb-2.5 pt-2 sm:hidden">
+            {visibleNavItems.map((item) => (
+              <Link
+                key={item.url}
+                href={item.url}
+                className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-all duration-200 ${navLinkClassName(
+                  isNavItemActive(item.url)
+                )}`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </header>
   )

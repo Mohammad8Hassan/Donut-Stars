@@ -66,7 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     //      the refresh token cookie. If the refresh token is also expired or missing,
     //      the user is treated as logged out.
     //   3. If refresh succeeds, retry GET /api/me with the new token.
-    //   4. Any non-OK final response clears the user.
+    //   4. A *confirmed* 401/403 (the server explicitly rejected the token) clears
+    //      the user. Anything else that stops us from getting a definitive answer —
+    //      a thrown network error (e.g. a cold-start/proxy blip) or a 5xx from either
+    //      endpoint — is inconclusive and leaves the existing user state untouched,
+    //      so a transient hiccup doesn't masquerade as a real logout.
     //
     // `checked` is always set to true in the finally block so that components
     // waiting on auth certainty unblock regardless of outcome.
@@ -78,55 +82,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         // console.log("Revalidating auth...");
         try {
-            let res = await fetch("/api/me", {
-                credentials: "include", // sends the HttpOnly access-token cookie
-            });
+            let res: Response;
+            try {
+                res = await fetch("/api/me", {
+                    credentials: "include", // sends the HttpOnly access-token cookie
+                });
+            } catch (err) {
+                // Couldn't even reach the server — unknown state, not a logout.
+                console.error("Auth revalidate error (me unreachable):", err);
+                return;
+            }
 
             if (res.status === 401) {
                 // Access token expired — try to get a new one via the refresh token.
-                const refreshRes = await fetch("/api/refresh", {
-                    method: "POST",
-                    credentials: "include", // sends the HttpOnly refresh-token cookie
-                });
+                let refreshRes: Response;
+                try {
+                    refreshRes = await fetch("/api/refresh", {
+                        method: "POST",
+                        credentials: "include", // sends the HttpOnly refresh-token cookie
+                    });
+                } catch (err) {
+                    console.error("Auth revalidate error (refresh unreachable):", err);
+                    return;
+                }
+
+                if (refreshRes.status === 401 || refreshRes.status === 403) {
+                    // Server explicitly rejected the refresh token — genuinely logged out.
+                    setUser(null);
+                    return;
+                }
 
                 if (!refreshRes.ok) {
-                    // Refresh token is also invalid or missing — user must log in again.
-                    setUser(null);
-                    setChecked(true);
-                    isLoadingRef.current = false;
-                    setIsLoading(false);
+                    // e.g. a 5xx from a DB hiccup — inconclusive, not a confirmed logout.
+                    console.error("Auth revalidate error: /api/refresh failed with", refreshRes.status);
                     return;
                 }
 
                 // Refresh succeeded; the server has set a new access-token cookie.
                 // Retry the identity check with the fresh token.
-                res = await fetch("/api/me", {
-                    credentials: "include",
-                });
+                try {
+                    res = await fetch("/api/me", {
+                        credentials: "include",
+                    });
+                } catch (err) {
+                    console.error("Auth revalidate error (me retry unreachable):", err);
+                    return;
+                }
+            }
+
+            if (res.status === 401 || res.status === 403) {
+                setUser(null);
+                return;
             }
 
             if (!res.ok) {
-                // Unexpected error from /api/me — treat as unauthenticated.
-                setUser(null);
-                setChecked(true);
-                isLoadingRef.current = false;
-                setIsLoading(false);
+                // Unexpected server error — inconclusive, leave existing state alone.
+                console.error("Auth revalidate error: /api/me failed with", res.status);
                 return;
             }
 
             const data = await res.json();
             setUser(data.user);
-        } catch (err) {
-            // Network failure or JSON parse error — fail safe to logged-out state.
-            console.error("Auth revalidate error:", err);
-            setUser(null);
         } finally {
             // Always mark auth as resolved so consumers stop waiting.
             setChecked(true);
             isLoadingRef.current = false;
             setIsLoading(false);
         }
-    }, []); //check this
+    }, []);
 
     // Run once on mount to establish the initial auth state before any page renders.
     // Because revalidate is stable (empty dep array above), this only fires once.

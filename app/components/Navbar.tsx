@@ -87,7 +87,7 @@ export default function Navbar() {
             : 'border-rose-100 bg-gradient-to-r from-white/95 via-rose-50/95 to-amber-50/95 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md'
         }`}
       >
-        <div className="grid grid-cols-[1fr_auto] items-center gap-y-0.5 px-2.5 py-2 sm:px-3 sm:py-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-y-0.5 px-2.5 sm:px-3 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
           <div className="flex items-center gap-1.5">
             <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
               {visibleNavItems.map((item) => (
@@ -118,9 +118,20 @@ export default function Navbar() {
           <Link
             href="/"
             aria-label="Go to home"
-            className="flex h-[4.1rem] w-[4.1rem] shrink-0 items-center justify-center self-center transition sm:h-[4.75rem] sm:w-[4.75rem]"
+            className="group relative flex h-[4.1rem] w-[4.1rem] shrink-0 items-center justify-center self-center transition duration-300 hover:-translate-y-0.5 sm:h-[4.75rem] sm:w-[4.75rem]"
           >
-            <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-rose-500/95 bg-white p-1.5 shadow-[0_14px_30px_rgba(244,63,94,0.22)] sm:border-4 sm:p-2">
+            {/* neon halo — blurred color bleeding out from behind the badge */}
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-full bg-rose-500 opacity-60 blur-lg transition-all duration-300 group-hover:opacity-90 group-hover:blur-xl"
+            />
+            <div
+              className="relative flex h-full w-full items-center justify-center rounded-full border-[3px] border-rose-500
+                bg-white shadow-[0_0_16px_3px_rgba(244,63,94,0.65),0_0_32px_8px_rgba(244,63,94,0.35),0_14px_30px_rgba(15,23,42,0.18)]
+                ring-1 ring-white/80 transition-shadow duration-300
+                group-hover:shadow-[0_0_22px_5px_rgba(244,63,94,0.8),0_0_44px_12px_rgba(244,63,94,0.45),0_14px_30px_rgba(15,23,42,0.18)]
+                sm:border-4"
+            >
               <div className="relative h-full w-full overflow-hidden rounded-full">
                 <Image src={logo} alt="Donut Stars logo" fill quality={100} className="object-cover" />
               </div>

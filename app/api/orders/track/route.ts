@@ -33,14 +33,7 @@ type BoxContentRow = {
   donut_name: string;
 };
 
-// ---------------------------------------------------------------------------
-// GET /api/orders/track?orderId=123&phone=555-1234
-//
-// Public, unauthenticated lookup so guests (who have no account/session) can
-// check the status of an order they placed. Requires the exact shipping
-// phone number as a shared secret so guessing an order id alone isn't enough
-// to see someone else's name/address.
-// ---------------------------------------------------------------------------
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

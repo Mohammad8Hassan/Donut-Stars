@@ -15,8 +15,6 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    // Keep is_default as numeric in SQL response; client normalizes it to boolean.
-    // This avoids ambiguous truthiness issues from MySQL TINYINT serialization.
     const [rows] = await db.execute(
       `
       SELECT

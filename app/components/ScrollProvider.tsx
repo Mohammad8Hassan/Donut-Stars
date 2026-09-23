@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
@@ -29,13 +28,7 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // #rootDiv below is the app's actual scroll container (overflow-y-auto on
-  // a div, not window/body), so Next's router — which only resets window
-  // scroll on navigation — never resets it. Without this, landing on a page
-  // after leaving one that was scrolled down (e.g. /order-confirmation after
-  // a tall /payment form) renders already scrolled. Keyed on pathname only
-  // (not full URL) so in-page search-param changes, like /menu?tab=, don't
-  // reset scroll on a tab switch.
+  
   useEffect(() => {
     if (scrollEl.current) {
       scrollEl.current.scrollTop = 0;

@@ -5,9 +5,6 @@ import { getSession } from "@/lib/session";
 import { getUserWithRoleById } from "@/lib/auth";
 import { checkRateLimit, resetRateLimit } from "@/lib/rateLimit";
 
-// 5 attempts per 15 minutes per user — mirrors the login endpoint's limit,
-// guarding against a hijacked/stolen session being used to brute-force the
-// current password before setting a new one.
 const PASSWORD_CHANGE_ATTEMPT_LIMIT = 5;
 const PASSWORD_CHANGE_WINDOW_MS = 15 * 60 * 1000;
 
@@ -61,23 +58,13 @@ export async function POST(req: Request) {
     const match = await bcrypt.compare(currentPassword, foundUser.password_hash);
 
     if (!match) {
-      // 400, not 401 — this route is already session-authenticated, and
-      // authFetch() treats any 401 as "access token expired" and silently
-      // retries the request after refreshing. A 401 here would trigger that
-      // retry for a wrong-password response, wasting a rate-limit attempt.
       return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
     }
 
-    // Successful match — clear this key's failed-attempt count, same reasoning
-    // as the login route (a few mistyped attempts shouldn't leave a cooldown).
     resetRateLimit(rateLimitKey);
 
     const newHash = await bcrypt.hash(newPassword, 10);
 
-    // Null out refresh_token_hash alongside the password update, same as
-    // /api/logout — this signs out any other session (or a stolen refresh
-    // token) the next time it tries to silently refresh, without disrupting
-    // the current tab until its short-lived access token naturally expires.
     await db.execute(
       "UPDATE users SET password_hash = ?, refresh_token_hash = NULL WHERE id = ?",
       [newHash, userId]

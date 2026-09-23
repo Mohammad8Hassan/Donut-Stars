@@ -13,33 +13,14 @@ export type userData = {
     roleName: string;
 };
 
-// Everything consumers can read or call from useAuth().
 type AuthContextType = {
-    // Null means no authenticated user (guest or not yet resolved).
     user: userData | null;
-
-    // True while a /api/me or /api/refresh request is in flight.
-    // Use this to show spinners or block actions that need an identity.
     isLoading: boolean;
-
-    // Flips to true after the very first auth check completes (success or failure).
-    // Guards that must wait for a definitive answer (e.g. redirect logic, cart hydration)
-    // should wait for checked === true before acting, so they don't flash or
-    // make decisions before the session cookie has been verified.
     checked: boolean;
-
-    // Re-runs the /api/me → optional /api/refresh → /api/me flow.
-    // Call this after login, logout, or any action that changes the session
-    // so the rest of the app sees the updated identity immediately.
     revalidate: () => Promise<void>;
-
-    // Direct setter for the user state — useful for optimistic updates
-    // (e.g. updating the displayed name after a profile edit without a full revalidate).
     setUser: Dispatch<SetStateAction<userData | null>>;
 };
 
-// Default values are placeholders for the rare case where useContext is called
-// outside of AuthProvider. In practice, AuthProvider wraps the whole app in layout.tsx.
 const AuthContext = createContext<AuthContextType>({
     user: null,
     isLoading: false,
@@ -54,28 +35,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const isLoadingRef = useRef(false);
     
-    // Starts false; becomes true after the first revalidate() settles.
-    // Children that depend on knowing whether a user is logged in must
-    // check this flag before rendering auth-sensitive UI.
     const [checked, setChecked] = useState(false);
 
-    // Verifies the current session and refreshes it if the access token has expired.
-    // Flow:
-    //   1. GET /api/me — returns 200 + user if the access token cookie is valid.
-    //   2. If 401, POST /api/refresh — attempts to issue a new access token using
-    //      the refresh token cookie. If the refresh token is also expired or missing,
-    //      the user is treated as logged out.
-    //   3. If refresh succeeds, retry GET /api/me with the new token.
-    //   4. A *confirmed* 401/403 (the server explicitly rejected the token) clears
-    //      the user. Anything else that stops us from getting a definitive answer —
-    //      a thrown network error (e.g. a cold-start/proxy blip) or a 5xx from either
-    //      endpoint — is inconclusive and leaves the existing user state untouched,
-    //      so a transient hiccup doesn't masquerade as a real logout.
-    //
-    // `checked` is always set to true in the finally block so that components
-    // waiting on auth certainty unblock regardless of outcome.
     const revalidate = useCallback(async () => {
-        // Prevent overlapping calls if one is already in flight.
         if (isLoadingRef.current) return;
 
         isLoadingRef.current = true;
@@ -152,7 +114,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Run once on mount to establish the initial auth state before any page renders.
-    // Because revalidate is stable (empty dep array above), this only fires once.
     useEffect(() => {
         revalidate();
     }, [revalidate]);

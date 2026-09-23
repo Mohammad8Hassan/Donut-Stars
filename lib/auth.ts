@@ -2,9 +2,6 @@ import jwt from "jsonwebtoken";
 import { db } from "@/lib/db";
 import { SessionUser } from "@/lib/session";
 
-// Read at call time (not module load) so a missing env var surfaces as a
-// clear error from whichever route triggered it, instead of crashing the
-// whole server at import time.
 export function getAccessTokenSecret(): string {
   const secret = process.env.JWT_ACCESS_SECRET;
   if (!secret) throw new Error("JWT_ACCESS_SECRET is not configured");

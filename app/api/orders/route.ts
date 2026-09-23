@@ -1,40 +1,25 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-// db is a mysql2 connection pool. A pool manages a set of reusable database
-// connections so the app doesn't have to open a new connection for every request.
-// You call db.query() to run a SELECT/INSERT/etc. on whichever connection is free.
-// For transactions you must call db.getConnection() to pin all your queries to
-// one specific connection (explained further down near the transaction block).
 import { getSession } from "@/lib/session";
 import { fetchOrderHistory } from "@/lib/orders";
 
-// ---------------------------------------------------------------------------
-// Types
-// These describe the shape of data coming in from the client (IncomingCartItem)
-// and the shape of rows coming back from the database (the *Row types).
-// mysql2 returns plain JS objects, so typing them helps TypeScript catch mistakes.
-// ---------------------------------------------------------------------------
-
-// One item the browser sends inside the cart when placing an order.
 type IncomingCartItem = {
-  id: string;         // product id from the database (may be a numeric string)
-  name: string;       // display name, used as a fallback if id lookup fails
-  price: number;      // unit price the client claims — we trust this for now
+  id: string;
+  name: string;
+  price: number;
   quantity: number;
-  size?: 3 | 6 | 12; // only set for box products (3/6/12 donut boxes)
   boxID?: string;
-  contents?: Array<{  // donuts the customer chose to fill a box with
+  contents?: Array<{  
     id: string;
     name?: string;
   }>;
 };
 
-// What we get back from the products table when we look up a product by id/name/size.
 type ProductRow = {
   id: number;
-  capacity: number | null; // null means it's a regular donut, a number means it's a box
-  category_name: string;   // "donuts" or "boxes" etc.
-  price: number;           // canonical price from DB — used server-side, never trusted from client
+  capacity: number | null;
+  category_name: string;
+  price: number;
 };
 
 // A fully validated cart item ready to be written to the database.
@@ -56,8 +41,6 @@ type AddressRow = {
   country: string;
 };
 
-// Address typed directly by a guest at checkout (not a saved `addresses` row).
-// Column max lengths mirror the `orders.shipping_*` columns in db/schema.sql.
 function resolveGuestAddress(raw: unknown): AddressRow | null {
   const source = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
 
@@ -75,19 +58,12 @@ function resolveGuestAddress(raw: unknown): AddressRow | null {
   return { full_name, phone, line1, city, postal_code, country };
 }
 
-// ---------------------------------------------------------------------------
-// Small utility helpers
-// ---------------------------------------------------------------------------
 
-// Safely converts any value to a number, returning null if it's NaN or Infinity.
-// Used to validate untrusted numbers from the request body.
 function toNumber(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-// Safely trims a string and returns null if it's empty or not a string at all.
-// maxLength truncates to avoid accidentally storing huge strings from bad clients.
 function toOptionalString(value: unknown, maxLength?: number): string | null {
   if (typeof value !== "string") {
     return null;
@@ -101,29 +77,20 @@ function toOptionalString(value: unknown, maxLength?: number): string | null {
   return maxLength ? trimmed.slice(0, maxLength) : trimmed;
 }
 
-// Returns true if a string contains only digits — used to check whether an
-// item id from the client looks like a real database id vs. a slug/name.
 function isNumericId(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
 // ---------------------------------------------------------------------------
 // resolveProductId
-// Looks up a product in the database using three fallback strategies:
-//   1. Numeric id (most specific — client sent a real db id)
-//   2. Box capacity (for items where only the size like "6-pack" is known)
-//   3. Product name string (last resort fallback)
-// Throws if nothing matches — this aborts the order.
+// Looks up a product by its numeric database id. The client-sent price/name
+// are otherwise ignored, but the id itself always comes from DB-sourced menu
+// data (see lib/menu.ts), so a plain id lookup is enough here.
+// Throws if the id is missing/non-numeric or doesn't match a product — this
+// aborts the order.
 // ---------------------------------------------------------------------------
 async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
-  const fallbackName = String(item.name || "").trim();
-
-  // Strategy 1: look up directly by numeric id.
-  // db.query(sql, [values]) sends the SQL to MySQL with the ? placeholders replaced
-  // by the values array. mysql2 escapes the values on the client side, which
-  // prevents SQL injection. The result is [rows, fields] — we only need rows.
   if (isNumericId(item.id)) {
-    const id = Number(item.id);
     const [rows]: any = await db.query(
       `
       SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
@@ -133,73 +100,27 @@ async function resolveProductId(item: IncomingCartItem): Promise<ProductRow> {
       WHERE p.id = ?
       LIMIT 1
       `,
-      [id]
+      [Number(item.id)]
     );
 
     if (rows?.length) return rows[0] as ProductRow;
   }
 
-  // Strategy 2: for box products the client sends a size (3/6/12).
-  // We find the matching box product by its capacity column.
-  if (item.size === 3 || item.size === 6 || item.size === 12) {
-    const [boxRows]: any = await db.query(
-      `
-      SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
-      FROM products p
-      INNER JOIN categories c
-        ON c.id = p.category_id
-      WHERE LOWER(TRIM(c.name)) = 'boxes' AND p.capacity = ?
-      LIMIT 1
-      `,
-      [item.size]
-    );
-
-    if (boxRows?.length) return boxRows[0] as ProductRow;
-  }
-
-  // Strategy 3: match by product name as a last resort.
-  if (fallbackName) {
-    const [nameRows]: any = await db.query(
-      `
-      SELECT p.id, p.price, p.capacity, LOWER(TRIM(c.name)) AS category_name
-      FROM products p
-      INNER JOIN categories c
-        ON c.id = p.category_id
-      WHERE p.name = ?
-      LIMIT 1
-      `,
-      [fallbackName]
-    );
-
-    if (nameRows?.length) return nameRows[0] as ProductRow;
-  }
-
-  // All three strategies failed — the product doesn't exist or the client sent bad data.
+  // No numeric id, or it didn't match any product — the client sent bad data.
   throw new Error(`Product not found for item ${item.id} (${item.name})`);
 }
 
-// ---------------------------------------------------------------------------
-// resolveDonutProductIds
-// For a box order the customer picks individual donuts to fill it.
-// This function validates each chosen donut actually exists in the "donuts"
-// category, then aggregates duplicates so we store one row per unique donut
-// with the combined quantity rather than one row per slot.
-// ---------------------------------------------------------------------------
+
 async function resolveDonutProductIdsforBox(contents: IncomingCartItem["contents"]): Promise<Array<{ donutProductId: number; quantity: number }>> {
-  // Map<donutProductId, count> — deduplicates repeated donut choices.
   const map = new Map<number, number>();
 
   for (const donut of contents ?? []) {
     const donutIdCandidate = toNumber(donut.id);
 
-    // Skip any donut slot whose id isn't a valid number (shouldn't happen with
-    // a well-behaved client but we guard anyway).
     if (donutIdCandidate === null) {
       continue;
     }
 
-    // Confirm the donut is a real product in the "donuts" category.
-    // This prevents a customer from putting a box product inside another box.
     const [donutRows]: any = await db.query(
       `
       SELECT p.id
@@ -217,7 +138,6 @@ async function resolveDonutProductIdsforBox(contents: IncomingCartItem["contents
     }
 
     const resolvedId = Number(donutRows[0].id);
-    // Increment the count for this donut id (customer may pick the same donut twice).
     map.set(resolvedId, (map.get(resolvedId) || 0) + 1);
   }
 
@@ -431,42 +351,16 @@ export async function POST(req: Request) {
 
     const preparingMins = 1; // 1 minute
     const deliveryMins = 8;
-    // MySQL's DATE_ADD rounds fractional MINUTE intervals to the nearest whole
-    // minute (0.5 -> 1), so convert to whole seconds before building the SQL.
     const preparingSecs = Math.round(preparingMins * 60);
     const deliverySecs = Math.round(deliveryMins * 60);
 
-    // -----------------------------------------------------------------------
-    // Database transaction
-    //
-    // A transaction groups multiple INSERT statements so they either ALL
-    // succeed or ALL get rolled back. This is critical here: if inserting the
-    // order_items fails halfway through, we don't want a partial order in the
-    // database with some items missing.
-    //
-    // WHY we use db.getConnection() instead of db.query() for this:
-    //   db is a pool — it can have up to N connections open at once.
-    //   db.query() grabs any free connection, runs one query, then gives it back.
-    //   But a transaction (BEGIN → INSERT → INSERT → COMMIT) must run on the
-    //   SAME connection the whole time, otherwise MySQL would see the BEGIN on
-    //   connection A and the INSERTs on connection B, and B would have no idea
-    //   a transaction was started.
-    //   db.getConnection() "checks out" one specific connection from the pool
-    //   and holds it until we call conn.release(), letting us use it exclusively
-    //   for the entire transaction.
-    // -----------------------------------------------------------------------
+
     const conn = await db.getConnection();
-    // orderId is declared here so it's accessible after the try/finally block
-    // when we build the success response.
     let orderId: number;
 
     try {
-      // Tell MySQL to start a transaction on this connection.
-      // From this point, nothing is permanently saved until we call commit().
       await conn.beginTransaction();
 
-      // Insert the parent order row. conn.query() works exactly like db.query()
-      // but runs on our pinned connection instead of a random pool connection.
       const [orderResult]: any = await conn.query(
         `
         INSERT INTO orders (
@@ -520,7 +414,6 @@ export async function POST(req: Request) {
         ]
       );
 
-      // insertId is MySQL's auto-increment id for the row we just inserted.
       orderId = Number(orderResult.insertId);
 
       // Insert one order_items row per line item, then insert box contents

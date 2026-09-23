@@ -12,19 +12,8 @@ import QuantitySelector from "./components/QuantitySelector";
 import { fetchMenu } from "@/lib/menu";
 import { IItem } from "@/types";
 
-// Homepage "drinks and occasions" teaser only has room for two sample
-// drinks — pinned to these specific DB products rather than an arbitrary
-// slice of the category.
 const FEATURED_DRINK_IDS = ["13", "9"];
 
-// This page fetches the live menu from the DB on every load. Without this,
-// Next.js tries to prerender it to static HTML at `next build` time, which
-// means hitting the database *during the build step* — on hosts like
-// Railway the build container doesn't have the same private-network access
-// to the DB that the running service gets, so that build-time query fails
-// outright. force-dynamic renders this per-request instead, which also
-// means the homepage always reflects current product data, not whatever
-// was in the DB the moment it was built.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {

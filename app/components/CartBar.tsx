@@ -7,7 +7,7 @@ import { ArrowRight, ShoppingBag } from 'lucide-react'
 import { selectCartCount, selectCartTotal } from '../store/cartSlice'
 import { useAppSelector } from '../store/hooks'
 
-const hideBarPaths = ['/checkout', '/login', '/register', '/payment', 'checkout']
+const hideBarPaths = ['/checkout', '/login', '/register', '/payment', ]
 
 export default function CartBar() {
   const cart = useAppSelector(state => state.cart.items)

@@ -6,10 +6,6 @@ type ExistingAdminRow = {
   id: number | string;
 };
 
-type RoleInsertResult = {
-  insertId: number;
-};
-
 export async function POST(req: Request) {
   const setupKey = process.env.ADMIN_SETUP_KEY;
 
@@ -71,15 +67,18 @@ export async function POST(req: Request) {
     );
   }
 
-  const [roleResult]: any = await db.query(
-    `
-    INSERT INTO roles (name)
-    VALUES ('admin')
-    ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)
-    `
+  const [roleRows]: any = await db.query(
+    "SELECT id FROM roles WHERE name = 'admin' LIMIT 1"
   );
 
-  const adminRoleId = Number((roleResult as RoleInsertResult).insertId);
+  if (!roleRows.length) {
+    return NextResponse.json(
+      { error: "'admin' role is not seeded" },
+      { status: 500 }
+    );
+  }
+
+  const adminRoleId = Number((roleRows[0] as ExistingAdminRow).id);
   const passwordHash = await bcrypt.hash(password, 10);
 
   const [result]: any = await db.query(

@@ -1,10 +1,3 @@
-// lib/orders.ts
-//
-// Shared "load a customer's orders with their line items and box contents"
-// logic. Originally lived inline in app/api/orders/route.ts; pulled out here
-// so app/api/orders/active/route.ts can reuse the exact same query/stitching
-// logic instead of duplicating it, just with a different WHERE clause.
-
 import { db } from "@/lib/db";
 
 // Row shape from the orders table (used when listing a customer's past orders).
@@ -72,32 +65,15 @@ export type OrderSummary = {
 };
 
 // Builds a comma-separated string of "?" placeholders for SQL IN clauses.
-// e.g. makePlaceholders(3) → "?, ?, ?"
 function makePlaceholders(count: number) {
   return Array.from({ length: count }, () => "?").join(", ");
 }
 
-// ---------------------------------------------------------------------------
-// fetchOrderHistory
-// Loads orders for a user, with their line items and box contents, in three
-// queries instead of N+1 queries:
-//   1. Fetch the user's orders (optionally only the ones still in progress)
-//   2. Fetch all order_items for those orders in one batch
-//   3. Fetch all box contents for those items in one batch
-// Then stitch everything together in JS before returning.
-//
-// `activeOnly: true` adds a status filter directly to the SQL WHERE clause
-// (rather than fetching everything and filtering in JS/on the client), so a
-// customer with a long order history doesn't pay to transfer and re-parse
-// their entire history on every poll of the active-orders page.
-// ---------------------------------------------------------------------------
 export async function fetchOrderHistory(userId: number, options?: { activeOnly?: boolean }): Promise<OrderSummary[]> {
-  // Not user input — a fixed literal chosen by our own code based on which
-  // route called this, so string-interpolating it is safe (same pattern as
-  // the NOW()/NULL branch in the POST /api/orders insert).
+  
   const statusFilter = options?.activeOnly ? "AND status NOT IN ('completed', 'cancelled')" : "";
 
-  // Query 1: this user's orders, newest first.
+  // Query 1: this user's orders
   const [orders]: any = await db.query(
     `
     SELECT
@@ -126,12 +102,12 @@ export async function fetchOrderHistory(userId: number, options?: { activeOnly?:
   const orderRows = (orders ?? []) as OrderListRow[];
   const orderIds = orderRows.map((order) => Number(order.id));
 
-  // If there are no matching orders, skip the follow-up queries entirely.
+  // If there are no matching orders, skip the follow-up queries
   if (orderIds.length === 0) {
     return [];
   }
 
-  // Query 2: fetch all line items for every order we just loaded.
+  // Query 2: fetch all line items for every order
   const [itemRows]: any = await db.query(
     `
     SELECT
@@ -193,8 +169,6 @@ export async function fetchOrderHistory(userId: number, options?: { activeOnly?:
       name: item.product_name,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unit_price),
-      // mysql2 can return numeric columns as strings depending on the driver version,
-      // so we always coerce with Number() to be safe.
       capacity: item.capacity === null ? null : Number(item.capacity),
       boxContents: boxContentsByOrderItem.get(Number(item.order_item_id)) ?? [],
     });

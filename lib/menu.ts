@@ -1,11 +1,3 @@
-// lib/menu.ts
-//
-// Shared "load the active menu (donuts/drinks/boxes) from the DB" logic.
-// Originally lived inline in app/api/menu/route.ts; pulled out here so
-// server components (e.g. app/page.tsx) can reuse the exact same
-// query/classification logic instead of duplicating it or round-tripping
-// through the API route.
-
 import { db } from "@/lib/db";
 import { IBoxItem, IItem } from "@/types";
 
@@ -15,7 +7,6 @@ export type MenuResponse = {
   boxes: IBoxItem[];
 };
 
-// Box items are identified in the DB by capacity (3/6/12) and menu category.
 function isBoxCapacity(value: unknown): value is 3 | 6 | 12 {
   return value === 3 || value === 6 || value === 12;
 }
@@ -57,12 +48,10 @@ export async function fetchMenu(): Promise<MenuResponse> {
     `
   );
 
-  // Ensure we always return the requested payload shape.
   const donuts: IItem[] = [];
   const drinks: IItem[] = [];
   const boxes: IBoxItem[] = [];
 
-  // Classify each product row into menu buckets expected by the client.
   for (const row of rows as any[]) {
     const category = String(row.category_name || "").toLowerCase();
     const price = Number(row.price);

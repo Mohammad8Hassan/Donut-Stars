@@ -33,6 +33,7 @@ export async function POST() {
     secure: true,
     sameSite: "lax",
     maxAge: 0,
+    path: "/",
   });
 
   res.cookies.set("refreshToken", "", {
@@ -40,6 +41,7 @@ export async function POST() {
     secure: true,
     sameSite: "lax",
     maxAge: 0,
+    path: "/",
   });
 
   return res;

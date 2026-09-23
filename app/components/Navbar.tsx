@@ -19,9 +19,6 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
 
-  // /track is the guest-only lookup tool — once we're sure someone is
-  // logged in, they have app/account/active-orders instead. Stays visible
-  // until `checked` resolves so guests never see it disappear-then-flash.
   const visibleNavItems = navItems.filter((item) => item.url !== '/track' || !(checked && user))
 
   const isNavItemActive = (url: string) =>

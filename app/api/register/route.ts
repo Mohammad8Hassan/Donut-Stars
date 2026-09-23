@@ -4,10 +4,6 @@ import { db } from "@/lib/db";
 import { signAccessToken, signRefreshToken } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
-// 5 account creations per hour per IP — no target-account concept here
-// (unlike login), so this is keyed by IP alone. Generous enough for a
-// household/office sharing one IP, tight enough to block mass signup bots
-// and throttle email-enumeration via the "Email already in use" response.
 const REGISTER_LIMIT = 5;
 const REGISTER_WINDOW_MS = 60 * 60 * 1000;
 
@@ -46,7 +42,6 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // role_id = 1 → customer
     const [result]: any = await db.query(
       `
       INSERT INTO users (role_id, name, email, password_hash, phone)
@@ -57,7 +52,6 @@ export async function POST(req: Request) {
 
     const userId = result.insertId;
 
-    // role_id 1 = customer (matches the INSERT above).
     const accessToken = signAccessToken({ id: userId, roleId: 1, roleName: "customer" });
     const refreshToken = signRefreshToken(userId);
 

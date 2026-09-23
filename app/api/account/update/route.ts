@@ -5,7 +5,6 @@ import { getSession } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
-    // 1️⃣ Authenticate (server authority)
     const session = await getSession();
 
     if (!session) {
@@ -15,10 +14,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ Get allowed fields from body
     const { name, email, phone } = await req.json();
 
-    // (optional but recommended)
     if (!name || !email) {
       return NextResponse.json(
         { error: "Invalid input" },
@@ -26,7 +23,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3️⃣ Update ONLY the logged-in user
     const userId = session.user.id;
 
     await db.execute(
@@ -38,12 +34,12 @@ export async function POST(req: Request) {
       [name, email, phone ?? null, userId]
     );
 
-    // 4️⃣ Re-fetch authoritative user
     const [rows]: any = await db.execute(
       `
-      SELECT id, name, email, phone
-      FROM users
-      WHERE id = ?
+      SELECT u.id AS uid, u.name, u.email, u.phone, r.id AS roleId, r.name AS roleName
+      FROM users u
+      JOIN roles r ON u.role_id = r.id
+      WHERE u.id = ?
       LIMIT 1
       `,
       [userId]
@@ -56,7 +52,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5️⃣ Return updated user
     return NextResponse.json(
       { user: rows[0] },
       { status: 200 }

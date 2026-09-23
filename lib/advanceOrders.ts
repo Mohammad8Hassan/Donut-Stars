@@ -6,10 +6,6 @@ export type AdvanceResult = {
 };
 
 export async function advanceOrders(): Promise<AdvanceResult> {
-  // Complete deliveries first so an order that is already out_for_delivery
-  // gets completed before we advance any preparing orders this tick.
-  // This prevents a single tick from skipping out_for_delivery entirely when
-  // both ready_at and delivery_due_at have already passed (e.g. old orders).
   const [delivResult]: any = await db.query(`
     UPDATE orders
     SET
@@ -22,8 +18,6 @@ export async function advanceOrders(): Promise<AdvanceResult> {
 
   // console.log(`[cron] advanced ${delivResult?.affectedRows ?? 0} orders to completed`);
 
-  // Then move preparing orders to out_for_delivery. These will be eligible
-  // for completion no earlier than the next cron tick.
   const [prepResult]: any = await db.query(`
     UPDATE orders
     SET

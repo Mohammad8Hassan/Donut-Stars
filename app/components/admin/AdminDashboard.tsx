@@ -385,8 +385,6 @@ export default function AdminDashboard() {
               ) : null}
 
               {orders.map((order) => {
-                // Address text is assembled client-side so the API can keep the original
-                // address fields individually available for future admin features.
                 const address = [
                   order.shipping_line1,
                   order.shipping_city,
@@ -467,9 +465,9 @@ export default function AdminDashboard() {
                               {order.items.length} line item{order.items.length === 1 ? "" : "s"}
                             </p>
                           </div>
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-950 text-white">
+                          {/* <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-950 text-white">
                             <Truck className="h-6 w-6" />
-                          </div>
+                          </div> */}
                         </div>
 
                         <div className="mt-2 space-y-2">

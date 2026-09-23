@@ -32,7 +32,7 @@ Per `AGENTS.md`: use [BoxBuilder.tsx](app/components/BoxBuilder.tsx) and [CartBa
 
 - Redux slice at `app/store/cartSlice.ts`. Regular items are keyed by `id` (re-adding merges quantity); **box instances are keyed by a separate `boxID`** so multiple boxes with different contents can coexist in the cart and be edited independently.
 - Cart is persisted to `localStorage` per identity (`cart_<userId>` or `cart_guest`) via `app/providers.tsx`, and rehydrated once auth state is `checked` — don't add competing persistence logic elsewhere.
-- Server-side, `/api/orders` (POST) never trusts client-sent prices or product identity: it re-resolves every item against the DB (by numeric id → box capacity → name, in that order) and recalculates the subtotal/shipping/total itself.
+- Server-side, `/api/orders` (POST) never trusts client-sent prices or product identity: it re-resolves every item against the DB by numeric id and recalculates the subtotal/shipping/total itself.
 
 ## Order status & tracking
 

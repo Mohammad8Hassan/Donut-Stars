@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     const sessionUser = sanitizeUser(foundUser);
-    const response = NextResponse.json({ user: sessionUser }, { status: 200 });
+    const response = NextResponse.json({ user: sessionUser });
 
     const accessToken = signAccessToken(sessionUser);
 

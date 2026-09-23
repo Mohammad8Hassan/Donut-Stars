@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 
-// Root-cause fix helper:
-// `is_default` might arrive as true/false, 1/0, or "1"/"0" depending on caller/serialization.
 function normalizeIsDefault(value: unknown): boolean {
   return value === true || value === 1 || value === "1" || value === "true";
 }
@@ -43,7 +41,6 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    // Update selected address first (ownership protected by user_id in WHERE).
     const [result]: any = await db.execute(
       `
       UPDATE addresses

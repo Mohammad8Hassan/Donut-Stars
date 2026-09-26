@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { TERMINAL_STATUS_GRACE_SECONDS } from "@/lib/orderStatus";
 
 // Row shape from the orders table (used when listing a customer's past orders).
 type OrderListRow = {
@@ -70,8 +71,23 @@ function makePlaceholders(count: number) {
 }
 
 export async function fetchOrderHistory(userId: number, options?: { activeOnly?: boolean }): Promise<OrderSummary[]> {
-  
-  const statusFilter = options?.activeOnly ? "AND status NOT IN ('completed', 'cancelled')" : "";
+
+  // "Active" still means "still in flight", but a just-finished order stays
+  // in for a short grace window after completed_at/cancelled_at so the
+  // client gets to render its terminal status at least once before it drops
+  // off (see TERMINAL_STATUS_GRACE_SECONDS) instead of vanishing on the very
+  // next poll.
+  const statusFilter = options?.activeOnly
+    ? `AND (
+        status NOT IN ('completed', 'cancelled')
+        OR (status = 'completed' AND completed_at >= DATE_SUB(NOW(), INTERVAL ? SECOND))
+        OR (status = 'cancelled' AND cancelled_at >= DATE_SUB(NOW(), INTERVAL ? SECOND))
+      )`
+    : "";
+
+  const params = options?.activeOnly
+    ? [userId, TERMINAL_STATUS_GRACE_SECONDS, TERMINAL_STATUS_GRACE_SECONDS]
+    : [userId];
 
   // Query 1: this user's orders
   const [orders]: any = await db.query(
@@ -96,7 +112,7 @@ export async function fetchOrderHistory(userId: number, options?: { activeOnly?:
     WHERE user_id = ? ${statusFilter}
     ORDER BY created_at DESC, id DESC
     `,
-    [userId]
+    params
   );
 
   const orderRows = (orders ?? []) as OrderListRow[];

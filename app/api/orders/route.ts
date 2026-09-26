@@ -350,7 +350,7 @@ export async function POST(req: Request) {
 
 
     const preparingMins = 1; // 1 minute
-    const deliveryMins = 8;
+    const deliveryMins = 2;
     const preparingSecs = Math.round(preparingMins * 60);
     const deliverySecs = Math.round(deliveryMins * 60);
 

@@ -13,6 +13,16 @@ export function isTerminalStatus(status: string): boolean {
   return TERMINAL_STATUSES.has(status);
 }
 
+// How long a just-finished order keeps showing up in "active" views (the
+// navbar strip, /account/active-orders) after hitting a terminal status, so
+// the completed/cancelled treatment in OrderStatusAnimation actually gets
+// seen instead of the order disappearing the instant it finishes. Mirrors
+// how delivery apps keep a "Delivered" order in the live-tracking list for a
+// bit before it rolls into history. Used both as the SQL grace window
+// (lib/orders.ts) and, doubled to milliseconds, as the client-side linger
+// delay for the guest flow (ActiveOrdersStrip.tsx).
+export const TERMINAL_STATUS_GRACE_SECONDS = 120;
+
 export function getStatusLabel(status: string): string {
   switch (status) {
     case "preparing":        return "Preparing";

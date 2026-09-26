@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { useGetActiveOrdersQuery, useTrackOrderQuery, type TrackOrderArgs } from "../store/orderApi";
 import { GUEST_ORDERS_CHANGED_EVENT, getGuestOrders, removeGuestOrder } from "@/lib/guestOrders";
-import { getStatusLabel, isTerminalStatus } from "@/lib/orderStatus";
+import { getStatusLabel, isTerminalStatus, TERMINAL_STATUS_GRACE_SECONDS } from "@/lib/orderStatus";
 import OrderStatusAnimation from "./OrderStatusAnimation";
 
 // Ambient "you have an order in flight" widget, always visible in the
@@ -21,6 +21,7 @@ import OrderStatusAnimation from "./OrderStatusAnimation";
 // Only the most recent order gets the big always-visible card; any others
 // live in a hover dropdown so the navbar doesn't get crowded.
 const POLL_INTERVAL_MS = 15000;
+const TERMINAL_LINGER_MS = TERMINAL_STATUS_GRACE_SECONDS * 1000;
 
 type ActiveOrderEntry = {
   key: string;
@@ -34,6 +35,13 @@ function getAccentClasses(status: string): string {
     return "border-orange-200/80 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 shadow-[0_14px_30px_rgba(249,115,22,0.16)] hover:shadow-[0_18px_38px_rgba(249,115,22,0.24)]";
   if (status === "out_for_delivery")
     return "border-violet-200/80 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-[0_14px_30px_rgba(139,92,246,0.14)] hover:shadow-[0_18px_38px_rgba(139,92,246,0.2)]";
+  // completed/cancelled only show up during the terminal-status linger (see
+  // TERMINAL_STATUS_GRACE_SECONDS) — accents match OrderStatusAnimation's
+  // emerald/rose treatment for the same statuses.
+  if (status === "completed")
+    return "border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-[0_14px_30px_rgba(16,185,129,0.14)] hover:shadow-[0_18px_38px_rgba(16,185,129,0.2)]";
+  if (status === "cancelled")
+    return "border-rose-200/80 bg-gradient-to-br from-rose-50 via-white to-red-50 shadow-[0_14px_30px_rgba(244,63,94,0.14)] hover:shadow-[0_18px_38px_rgba(244,63,94,0.2)]";
   return "border-zinc-200 bg-white shadow-sm hover:shadow-md";
 }
 
@@ -52,18 +60,45 @@ function GuestOrderStatusFetcher({
 }) {
   const { data, error } = useTrackOrderQuery(order, { pollingInterval: POLL_INTERVAL_MS });
   const resolvedRef = useRef(false);
+  // Guards against scheduling more than one linger timer across repeated
+  // polls once a terminal status is seen; intentionally NOT the effect's
+  // cleanup, since that reruns on every poll (new `data` reference) and
+  // would cancel+never-reschedule the timer before it got a chance to fire.
+  const lingerTimerSet = useRef(false);
+  const lingerTimeoutId = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (resolvedRef.current) return;
 
-    if (error || (data && isTerminalStatus(data.status))) {
+    if (error) {
       resolvedRef.current = true;
       onResolved(order.orderId);
       return;
     }
 
-    if (data) onStatus(order.orderId, data.status);
+    if (!data) return;
+
+    // Report the terminal status too (instead of resolving immediately) so
+    // the completed/cancelled treatment in OrderStatusAnimation actually
+    // renders, then linger before removing the entry.
+    onStatus(order.orderId, data.status);
+
+    if (isTerminalStatus(data.status) && !lingerTimerSet.current) {
+      lingerTimerSet.current = true;
+      lingerTimeoutId.current = setTimeout(() => {
+        resolvedRef.current = true;
+        onResolved(order.orderId);
+      }, TERMINAL_LINGER_MS);
+    }
   }, [data, error, order.orderId, onStatus, onResolved]);
+
+  // Unmount-only cleanup (e.g. login happens mid-linger) — deliberately
+  // separate from the effect above so per-poll reruns don't clear it early.
+  useEffect(() => {
+    return () => {
+      if (lingerTimeoutId.current) clearTimeout(lingerTimeoutId.current);
+    };
+  }, []);
 
   return null;
 }

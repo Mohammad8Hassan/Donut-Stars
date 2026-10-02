@@ -1,16 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ShieldCheck } from "lucide-react";
 import { skipToken } from "@reduxjs/toolkit/query/react";
 import { getStatusBadgeClasses, getStatusLabel, isTerminalStatus } from "@/lib/orderStatus";
 import { useTrackOrderQuery, type TrackOrderArgs } from "@/app/store/orderApi";
-
-// How often to re-poll a tracked order while it's still in flight. The cron
-// worker only advances statuses once a minute, so this just needs to be
-// frequent enough to feel live without hammering the endpoint.
-const POLL_INTERVAL_MS = 15000;
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "data" in error) {
@@ -37,28 +32,15 @@ function TrackOrderForm() {
   const [phone, setPhone] = useState("");
   const [submittedArgs, setSubmittedArgs] = useState<TrackOrderArgs | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState(0);
 
+  // Live updates come from the SSE subscription in orderApi.ts's
+  // onCacheEntryAdded (opened/closed automatically as this query is
+  // subscribed/unsubscribed) — no pollingInterval needed here anymore.
   const {
     data: order,
     error: queryError,
     isLoading,
-    isFetching,
-  } = useTrackOrderQuery(submittedArgs ?? skipToken, { pollingInterval });
-
-  // Keep polling while the order is still moving, stop once it hits a
-  // terminal status (or the lookup failed) so we're not polling forever.
-  useEffect(() => {
-    if (!submittedArgs || queryError) {
-      setPollingInterval(0);
-      return;
-    }
-    if (order && isTerminalStatus(order.status)) {
-      setPollingInterval(0);
-      return;
-    }
-    setPollingInterval(POLL_INTERVAL_MS);
-  }, [submittedArgs, order?.status, queryError]);
+  } = useTrackOrderQuery(submittedArgs ?? skipToken);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -145,7 +127,10 @@ function TrackOrderForm() {
                 </span>
                 {isLive && (
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500">
-                    <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${isFetching ? "animate-pulse" : ""}`} />
+                    {/* Pulses continuously while the SSE subscription is open — there's no
+                        per-message "isFetching" moment to key off anymore like the old
+                        polling version had, so this just means "connected", not "just updated". */}
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Live — updates automatically
                   </span>
                 )}

@@ -14,13 +14,16 @@ import OrderStatusAnimation from "./OrderStatusAnimation";
 // only rendering when there's something relevant to show).
 //
 // Logged-in users are backed by GET /api/orders/active (same query the
-// account/active-orders page polls). Guests have no session, so they're
+// account/active-orders page subscribes to). Guests have no session, so they're
 // backed by lib/guestOrders.ts, a small localStorage list of {orderId,
 // phone} pairs written on successful guest checkout (app/payment/page.tsx).
 //
 // Only the most recent order gets the big always-visible card; any others
 // live in a hover dropdown so the navbar doesn't get crowded.
-const POLL_INTERVAL_MS = 15000;
+//
+// Both queries below get their live updates via SSE now (onCacheEntryAdded
+// in app/store/orderApi.ts) instead of a pollingInterval — this component
+// just consumes whatever's in the RTK Query cache like normal.
 const TERMINAL_LINGER_MS = TERMINAL_STATUS_GRACE_SECONDS * 1000;
 
 type ActiveOrderEntry = {
@@ -58,12 +61,13 @@ function GuestOrderStatusFetcher({
   onStatus: (orderId: string, status: string) => void;
   onResolved: (orderId: string) => void;
 }) {
-  const { data, error } = useTrackOrderQuery(order, { pollingInterval: POLL_INTERVAL_MS });
+  const { data, error } = useTrackOrderQuery(order);
   const resolvedRef = useRef(false);
   // Guards against scheduling more than one linger timer across repeated
-  // polls once a terminal status is seen; intentionally NOT the effect's
-  // cleanup, since that reruns on every poll (new `data` reference) and
-  // would cancel+never-reschedule the timer before it got a chance to fire.
+  // SSE updates once a terminal status is seen; intentionally NOT the
+  // effect's cleanup, since that reruns on every update (new `data`
+  // reference) and would cancel+never-reschedule the timer before it got a
+  // chance to fire.
   const lingerTimerSet = useRef(false);
   const lingerTimeoutId = useRef<ReturnType<typeof setTimeout>>();
 
@@ -93,7 +97,7 @@ function GuestOrderStatusFetcher({
   }, [data, error, order.orderId, onStatus, onResolved]);
 
   // Unmount-only cleanup (e.g. login happens mid-linger) — deliberately
-  // separate from the effect above so per-poll reruns don't clear it early.
+  // separate from the effect above so per-update reruns don't clear it early.
   useEffect(() => {
     return () => {
       if (lingerTimeoutId.current) clearTimeout(lingerTimeoutId.current);
@@ -190,8 +194,6 @@ export default function ActiveOrdersStrip() {
   }, [isGuest]);
 
   const { data: activeOrders = [] } = useGetActiveOrdersQuery(undefined, {
-    pollingInterval: POLL_INTERVAL_MS,
-    skipPollingIfUnfocused: true,
     skip: !checked || !user,
   });
 

@@ -5,10 +5,6 @@ import OrderStatusAnimation from "@/app/components/OrderStatusAnimation";
 import { getStatusLabel, getStatusBadgeClasses } from "@/lib/orderStatus";
 import { useGetActiveOrdersQuery } from "@/app/store/orderApi";
 
-// Same cadence as the guest-facing /track page — the cron worker only
-// advances order statuses once a minute, so this is frequent enough to feel live.
-const POLL_INTERVAL_MS = 15000;
-
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -38,15 +34,14 @@ function formatCardDigits(last4: string | null) {
 }
 
 export default function ActiveOrdersPage() {
+  // Live updates come from the SSE subscription in orderApi.ts's
+  // onCacheEntryAdded (opened/closed automatically as this query is
+  // subscribed/unsubscribed) — no pollingInterval needed here anymore.
   const {
     data: orders = [],
     isLoading,
-    isFetching,
     error,
-  } = useGetActiveOrdersQuery(undefined, {
-    pollingInterval: POLL_INTERVAL_MS,
-    skipPollingIfUnfocused: true,
-  });
+  } = useGetActiveOrdersQuery();
 
   const errorMessage = error ? "Failed to load your active orders." : null;
 
@@ -60,7 +55,9 @@ export default function ActiveOrdersPage() {
           />
           {!isLoading && !errorMessage ? (
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500">
-              <span className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${isFetching ? "animate-pulse" : ""}`} />
+              {/* Pulses continuously while the SSE subscription is open — "connected",
+                  not "just updated" (there's no longer a per-poll isFetching moment). */}
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live — updates automatically
             </span>
           ) : null}

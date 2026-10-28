@@ -33,9 +33,6 @@ function TrackOrderForm() {
   const [submittedArgs, setSubmittedArgs] = useState<TrackOrderArgs | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Live updates come from the SSE subscription in orderApi.ts's
-  // onCacheEntryAdded (opened/closed automatically as this query is
-  // subscribed/unsubscribed) — no pollingInterval needed here anymore.
   const {
     data: order,
     error: queryError,
@@ -127,9 +124,6 @@ function TrackOrderForm() {
                 </span>
                 {isLive && (
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500">
-                    {/* Pulses continuously while the SSE subscription is open — there's no
-                        per-message "isFetching" moment to key off anymore like the old
-                        polling version had, so this just means "connected", not "just updated". */}
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Live — updates automatically
                   </span>

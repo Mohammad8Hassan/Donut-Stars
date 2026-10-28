@@ -73,8 +73,6 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const activeNavItem = accountNavItems.find((item) => item.href === pathname);
 
-  // Collapse the mobile menu whenever the route changes so it doesn't
-  // stay open after the user taps into a section.
   useEffect(() => {
     setMobileNavOpen(false);
   }, [pathname]);

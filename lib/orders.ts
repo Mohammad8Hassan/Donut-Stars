@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { TERMINAL_STATUS_GRACE_SECONDS } from "@/lib/orderStatus";
 import { advanceOrders } from "@/lib/advanceOrders";
 
-// Row shape from the orders table (used when listing a customer's past orders).
 type OrderListRow = {
   id: number | string;
   status: string;
@@ -21,7 +20,6 @@ type OrderListRow = {
   created_at: Date | string;
 };
 
-// Row shape from order_items joined with products.
 type OrderItemListRow = {
   order_item_id: number | string;
   order_id: number | string;
@@ -31,7 +29,6 @@ type OrderItemListRow = {
   capacity: number | string | null;
 };
 
-// Row shape from order_item_box_contents joined with products.
 type BoxContentListRow = {
   order_item_id: number | string;
   quantity: number | string;
@@ -66,7 +63,6 @@ export type OrderSummary = {
   items: OrderItemSummary[];
 };
 
-// Builds a comma-separated string of "?" placeholders for SQL IN clauses.
 function makePlaceholders(count: number) {
   return Array.from({ length: count }, () => "?").join(", ");
 }
@@ -209,8 +205,6 @@ export async function fetchOrderHistory(userId: number, options?: { activeOnly?:
   }));
 }
 
-// Row shape from the orders table for a single tracked order (the guest
-// flow looks a single order up by id + shipping phone, not by user_id).
 type TrackedOrderRow = {
   id: number | string;
   status: string;
@@ -226,9 +220,6 @@ type TrackedOrderRow = {
   created_at: Date | string;
 };
 
-// Row shape from order_items joined with products, scoped to one order
-// (no order_id column needed here, unlike OrderItemListRow above which
-// batches items across many orders at once).
 type TrackedItemRow = {
   order_item_id: number | string;
   quantity: number | string;
@@ -253,23 +244,10 @@ export type TrackedOrder = {
   items: OrderItemSummary[];
 };
 
-// ---------------------------------------------------------------------------
-// fetchTrackedOrder
-// Guest order lookup by id + shipping phone (the phone acts as a shared
-// secret in place of a session — see app/api/orders/track/route.ts). Shared
-// by both that one-shot route and the SSE route at
-// app/api/orders/track/stream/route.ts so the actual query only lives in
-// one place, per the same "don't fork this logic" convention fetchOrderHistory
-// above follows. Returns null when nothing matches; callers decide how to
-// respond (404 for the one-shot route, a "not-found" SSE event for the
-// stream route).
-// ---------------------------------------------------------------------------
 export async function fetchTrackedOrder(orderId: number, phone: string): Promise<TrackedOrder | null> {
   
   await advanceOrders();
 
-  // Query 1: the order itself, gated on id + phone matching together so a
-  // guessed order id alone isn't enough to see someone else's order.
   const [orderRows]: any = await db.query(
     `
     SELECT

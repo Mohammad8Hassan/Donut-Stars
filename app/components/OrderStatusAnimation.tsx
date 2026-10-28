@@ -1,18 +1,10 @@
 import { Bike, CheckCircle2, ChefHat, Package, XCircle } from "lucide-react";
 
-// Canonical animated icon for an order's status — used by the navbar's
-// ActiveOrdersStrip and by app/account/active-orders/page.tsx so both places
-// show the same visual language instead of two hand-rolled versions.
-// "preparing" and "out_for_delivery" get distinct animations; everything
-// else (completed/cancelled/unknown) is a static icon so this stays safe to
-// reuse anywhere an order status shows up, not just the active-only views.
 type Props = {
   status: string;
   size?: "sm" | "md" | "lg";
 };
 
-// "sm" (dropdown rows) skips the ping ring — several of them animating at
-// once in a list reads as noisy rather than attention-grabbing.
 const SIZES = {
   sm: { circle: "h-8 w-8", icon: "h-4 w-4", ping: false },
   md: { circle: "h-12 w-12", icon: "h-6 w-6", ping: true },
@@ -40,11 +32,6 @@ export default function OrderStatusAnimation({ status, size = "md" }: Props) {
   }
 
   if (status === "out_for_delivery") {
-    // Outer wrapper stays overflow-visible so the ping ring can glow past the
-    // circle's edge; the inner circle clips so the bike reads as riding
-    // through the frame (enters/exits the edges) instead of just wobbling
-    // in place — clipping needs its own layer since the ping ring shouldn't
-    // be clipped too.
     return (
       <div className={`relative flex ${circle} shrink-0 items-center justify-center`}>
         {ping && <span className="absolute inset-0 rounded-full bg-violet-300/50 animate-ping" />}

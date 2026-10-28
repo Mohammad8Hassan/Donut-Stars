@@ -295,19 +295,8 @@ export default function PaymentPage(): JSX.Element {
       if (isGuest && data.orderId) {
         addGuestOrder(String(data.orderId), guestAddress.phone.trim());
       } else if (!isGuest) {
-        // Refetch the navbar's active-orders query right away instead of
-        // waiting for the SSE stream's next tick (up to ~4s away, see
-        // app/api/orders/active/stream/route.ts) — the order was just
-        // placed, so this should show up in the navbar instantly.
         dispatch(orderApi.util.invalidateTags(["ActiveOrders"]));
 
-        // If the navbar's active-orders stream had gone idle-closed (no
-        // orders were in flight before this one), the invalidateTags call
-        // above only refreshes the one-shot snapshot — it won't reopen the
-        // SSE connection, since RTK Query's onCacheEntryAdded only runs
-        // once per subscription and ActiveOrdersStrip never unmounts
-        // across a logged-in session. This event is what reopens it — see
-        // getActiveOrders' onCacheEntryAdded in app/store/orderApi.ts.
         window.dispatchEvent(new Event(ACTIVE_ORDERS_CHANGED_EVENT));
       }
 

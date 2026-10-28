@@ -30,12 +30,6 @@ export default function Section({imageSrc, children, title, mrgn, height}:propTy
         </div>
       } */}
       <div className="flex xs:flex-row flex-col-reverse" style={{ minHeight: 0, flex: '4 1 0px' ,
-        // backgroundImage: `
-        // linear-gradient(to right, rgba(255,255,255,0) 35%, rgba(255,255,255,1) 40%),
-        // url(${imageSrc.src})`,
-        // backgroundSize: 'cover',
-        // backgroundRepeat: 'no-repeat',
-        // backgroundPosition: 'center',
         width:"100%",
         justifyContent:"end",
       }}>

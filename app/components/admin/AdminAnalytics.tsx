@@ -24,7 +24,6 @@ import {
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { authFetch } from "@/app/api/authFetch";
 
-// These types reflect the normalized /api/admin/analytics payload, not raw database rows.
 type DailyPoint = { date: string; orders: number; revenue: number };
 type BestSeller = {
   productId: number;
@@ -51,9 +50,6 @@ type AnalyticsResponse = {
 
 const rangeOptions = [7, 30, 90];
 
-// Fixed hue assignment validated against the app's --chart-N tokens: chart-3 is too dark/
-// desaturated on a white card, chart-4/5 are borderline contrast so we always pair them
-// with direct labels rather than relying on color alone.
 const categoryColors: Record<string, string> = {
   Donuts: "hsl(var(--chart-1))",
   Drinks: "hsl(var(--chart-2))",
@@ -123,8 +119,6 @@ export default function AdminAnalytics() {
 
     async function hydrate() {
       try {
-        // Only the loading flag toggles here -- previous data stays on screen during
-        // a range change or manual refresh instead of flashing empty.
         setLoading(true);
         setError(null);
         const next = await loadAnalytics(days);
@@ -221,9 +215,6 @@ export default function AdminAnalytics() {
 
         {data ? (
           <>
-            {/* Orders/day and revenue/day are kept as two single-axis charts rather than one
-                dual-axis combo -- order counts and dollars are different scales, and sharing
-                an axis would imply a correlation the data doesn't actually show. */}
             <section className="grid gap-3 lg:grid-cols-2">
               <article className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white p-3 shadow-[0_18px_38px_rgba(15,23,42,0.06)] sm:p-4">
                 <div className="flex items-center justify-between gap-2">

@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 import { ORDER_STATUSES } from "@/lib/orderStatus";
+import { advanceOrders } from "@/lib/advanceOrders";
 
-// These row shapes reflect the raw SQL result sets used to build the admin order feed.
-// Like the customer orders route, we normalize ids and numeric money values before responding.
 type AdminOrderRow = {
   id: number | string;
   status: string;
@@ -47,17 +46,15 @@ function makePlaceholders(count: number) {
 }
 
 export async function GET(req: Request) {
-  // Middleware redirects most unauthorized traffic away from admin pages,
-  // but the route still performs its own authorization for real security.
   const guard = await requireAdmin();
   if (guard.response) {
     return guard.response;
   }
 
   try {
+    await advanceOrders();
+
     const { searchParams } = new URL(req.url);
-    // The admin UI supports lightweight filtering by order status and a small
-    // configurable result limit for the recent queue.
     const status = searchParams.get("status")?.trim().toLowerCase() ?? "";
     const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? "12"), 1), 100);
     const allowedStatuses = new Set<string>(ORDER_STATUSES);
@@ -70,8 +67,6 @@ export async function GET(req: Request) {
       values.push(status);
     }
 
-    // The primary query fetches order-level information and joins customer identity
-    // when the order belongs to a registered user.
     values.push(limit);
 
     const [orders]: any = await db.query(
@@ -113,8 +108,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ orders: [] }, { status: 200 });
     }
 
-    // We then load line items for all returned orders in one batch to avoid
-    // per-order queries and keep the dashboard responsive as volume grows.
     const [itemRows]: any = await db.query(
       `
       SELECT
@@ -138,8 +131,6 @@ export async function GET(req: Request) {
     const boxContentsByOrderItem = new Map<number, Array<{ name: string; quantity: number }>>();
 
     if (orderItemIds.length > 0) {
-      // Box contents are stored separately from order_items, so we stitch them back in
-      // here to give admins the full composition of custom donut boxes.
       const [boxRows]: any = await db.query(
         `
         SELECT
@@ -166,8 +157,6 @@ export async function GET(req: Request) {
       }
     }
 
-    // Group normalized line items under their parent orders so the frontend receives
-    // a nested structure instead of multiple raw tables.
     const itemsByOrder = new Map<
       number,
       Array<{
@@ -194,8 +183,6 @@ export async function GET(req: Request) {
       itemsByOrder.set(orderId, existing);
     }
 
-    // Return a fully normalized payload with customer info, order totals, and nested
-    // line items ready for rendering in the dashboard UI.
     const payload = orderRows.map((order) => ({
       id: Number(order.id),
       status: order.status,

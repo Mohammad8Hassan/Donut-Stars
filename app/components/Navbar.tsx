@@ -31,8 +31,6 @@ export default function Navbar() {
 
   const activeNavItem = visibleNavItems.find((item) => isNavItemActive(item.url))
 
-  // Collapse the mobile nav dropdown on navigation and on outside clicks —
-  // it's an inline panel, not a full-screen overlay, so nothing else closes it.
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [pathname])
@@ -51,8 +49,6 @@ export default function Navbar() {
   }, [mobileMenuOpen])
 
   const handleLogOut = async () => {
-    // Guard against rapid repeated clicks firing multiple concurrent
-    // /api/logout requests before the button's disabled state re-renders.
     if (isLoggingOut) return
 
     setIsLoggingOut(true)
@@ -117,7 +113,6 @@ export default function Navbar() {
             aria-label="Go to home"
             className="group relative flex h-[4.1rem] w-[4.1rem] shrink-0 items-center justify-center self-center transition duration-300 hover:-translate-y-0.5 sm:h-[4.75rem] sm:w-[4.75rem]"
           >
-            {/* neon halo — blurred color bleeding out from behind the badge */}
             <div
               aria-hidden
               className="absolute inset-0 rounded-full bg-rose-500 opacity-25 blur-md transition-all duration-300 group-hover:opacity-40 group-hover:blur-lg"

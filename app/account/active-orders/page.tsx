@@ -34,9 +34,6 @@ function formatCardDigits(last4: string | null) {
 }
 
 export default function ActiveOrdersPage() {
-  // Live updates come from the SSE subscription in orderApi.ts's
-  // onCacheEntryAdded (opened/closed automatically as this query is
-  // subscribed/unsubscribed) — no pollingInterval needed here anymore.
   const {
     data: orders = [],
     isLoading,
@@ -55,8 +52,6 @@ export default function ActiveOrdersPage() {
           />
           {!isLoading && !errorMessage ? (
             <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500">
-              {/* Pulses continuously while the SSE subscription is open — "connected",
-                  not "just updated" (there's no longer a per-poll isFetching moment). */}
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live — updates automatically
             </span>

@@ -17,7 +17,6 @@ import {
 import { authFetch } from "@/app/api/authFetch";
 import { ORDER_STATUSES, getStatusLabel, getStatusBadgeClasses } from "@/lib/orderStatus";
 
-// These types reflect the normalized admin API payloads, not raw database rows.
 type AdminStats = {
   totalOrders: number;
   revenue: number;
@@ -87,8 +86,6 @@ function formatDateTime(value: string) {
 }
 
 async function loadDashboard(status: string): Promise<DashboardResponse> {
-  // Stats and orders are fetched in parallel because the dashboard needs both
-  // to paint the initial screen and neither depends on the other.
   const [statsRes, ordersRes] = await Promise.all([
     authFetch("/api/admin/stats", { cache: "no-store" }),
     authFetch(`/api/admin/orders?limit=12${status ? `&status=${status}` : ""}`, {
@@ -131,8 +128,6 @@ export default function AdminDashboard() {
 
     async function hydrate() {
       try {
-        // The dashboard reloads when the filter changes or when we manually bump
-        // reloadTick via the refresh button.
         setLoading(true);
         setError(null);
         const data = await loadDashboard(statusFilter);
@@ -169,7 +164,6 @@ export default function AdminDashboard() {
       setUpdatingOrderId(orderId);
       setError(null);
 
-      // Status updates are performed against the dedicated admin write endpoint.
       const res = await authFetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -181,8 +175,6 @@ export default function AdminDashboard() {
         throw new Error(data?.error ?? "Failed to update order status.");
       }
 
-      // After a successful mutation we refresh both the queue and the stats so
-      // counters like pending/completed stay in sync with the visible order card.
       const data = await loadDashboard(statusFilter);
 
       startTransition(() => {
@@ -267,8 +259,6 @@ export default function AdminDashboard() {
                   View analytics
                 </Link>
                 <button
-                  // This increments a tiny reload token rather than mutating the filter,
-                  // which gives us an explicit refresh without changing dashboard state.
                   onClick={() => setReloadTick((current) => current + 1)}
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-4 text-sm font-semibold text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50"
                 >
@@ -521,8 +511,6 @@ export default function AdminDashboard() {
 
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <select
-                              // Draft status changes locally so admins can choose a new state
-                              // before committing it with the action button.
                               value={statusDrafts[order.id] ?? order.status}
                               onChange={(event) =>
                                 setStatusDrafts((current) => ({

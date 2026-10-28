@@ -21,7 +21,6 @@ export async function POST() {
         [decoded.userId]
       );
     } catch {
-      // Token invalid/expired — still clear cookies
     }
   }
 

@@ -9,21 +9,6 @@ import { GUEST_ORDERS_CHANGED_EVENT, getGuestOrders, removeGuestOrder } from "@/
 import { getStatusLabel, isTerminalStatus, TERMINAL_STATUS_GRACE_SECONDS } from "@/lib/orderStatus";
 import OrderStatusAnimation from "./OrderStatusAnimation";
 
-// Ambient "you have an order in flight" widget, always visible in the
-// navbar rather than a click-to-open panel (mirrors CartBar's philosophy of
-// only rendering when there's something relevant to show).
-//
-// Logged-in users are backed by GET /api/orders/active (same query the
-// account/active-orders page subscribes to). Guests have no session, so they're
-// backed by lib/guestOrders.ts, a small localStorage list of {orderId,
-// phone} pairs written on successful guest checkout (app/payment/page.tsx).
-//
-// Only the most recent order gets the big always-visible card; any others
-// live in a hover dropdown so the navbar doesn't get crowded.
-//
-// Both queries below get their live updates via SSE now (onCacheEntryAdded
-// in app/store/orderApi.ts) instead of a pollingInterval — this component
-// just consumes whatever's in the RTK Query cache like normal.
 const TERMINAL_LINGER_MS = TERMINAL_STATUS_GRACE_SECONDS * 1000;
 
 type ActiveOrderEntry = {
@@ -38,9 +23,6 @@ function getAccentClasses(status: string): string {
     return "border-orange-200/80 bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 shadow-[0_14px_30px_rgba(249,115,22,0.16)] hover:shadow-[0_18px_38px_rgba(249,115,22,0.24)]";
   if (status === "out_for_delivery")
     return "border-violet-200/80 bg-gradient-to-br from-violet-50 via-white to-indigo-50 shadow-[0_14px_30px_rgba(139,92,246,0.14)] hover:shadow-[0_18px_38px_rgba(139,92,246,0.2)]";
-  // completed/cancelled only show up during the terminal-status linger (see
-  // TERMINAL_STATUS_GRACE_SECONDS) — accents match OrderStatusAnimation's
-  // emerald/rose treatment for the same statuses.
   if (status === "completed")
     return "border-emerald-200/80 bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-[0_14px_30px_rgba(16,185,129,0.14)] hover:shadow-[0_18px_38px_rgba(16,185,129,0.2)]";
   if (status === "cancelled")
@@ -48,10 +30,6 @@ function getAccentClasses(status: string): string {
   return "border-zinc-200 bg-white shadow-sm hover:shadow-md";
 }
 
-// Fetches one guest order's live status and reports it upward — renders
-// nothing itself, so the parent can drive a single unified primary-card +
-// dropdown UI regardless of whether entries came from the guest
-// localStorage list or the logged-in active-orders query.
 function GuestOrderStatusFetcher({
   order,
   onStatus,
@@ -63,11 +41,6 @@ function GuestOrderStatusFetcher({
 }) {
   const { data, error } = useTrackOrderQuery(order);
   const resolvedRef = useRef(false);
-  // Guards against scheduling more than one linger timer across repeated
-  // SSE updates once a terminal status is seen; intentionally NOT the
-  // effect's cleanup, since that reruns on every update (new `data`
-  // reference) and would cancel+never-reschedule the timer before it got a
-  // chance to fire.
   const lingerTimerSet = useRef(false);
   const lingerTimeoutId = useRef<ReturnType<typeof setTimeout>>();
 
@@ -82,9 +55,6 @@ function GuestOrderStatusFetcher({
 
     if (!data) return;
 
-    // Report the terminal status too (instead of resolving immediately) so
-    // the completed/cancelled treatment in OrderStatusAnimation actually
-    // renders, then linger before removing the entry.
     onStatus(order.orderId, data.status);
 
     if (isTerminalStatus(data.status) && !lingerTimerSet.current) {
@@ -96,8 +66,6 @@ function GuestOrderStatusFetcher({
     }
   }, [data, error, order.orderId, onStatus, onResolved]);
 
-  // Unmount-only cleanup (e.g. login happens mid-linger) — deliberately
-  // separate from the effect above so per-update reruns don't clear it early.
   useEffect(() => {
     return () => {
       if (lingerTimeoutId.current) clearTimeout(lingerTimeoutId.current);
@@ -107,15 +75,6 @@ function GuestOrderStatusFetcher({
   return null;
 }
 
-// The pill is a Link (navigate to the primary order) with the chevron as a
-// separate sibling button rather than nested inside the Link — desktop opens
-// the "other active orders" dropdown via CSS group-hover, but there's no
-// hover on mobile, so the chevron needs its own tap target that toggles the
-// dropdown (`onToggleExpand`) without also triggering navigation. The
-// group-hover classes are wrapped in `[@media(hover:hover)]:` so they're
-// inert on touch devices — otherwise tapping the chevron satisfies `:hover`
-// ("sticky hover"), and that leftover hover match keeps the dropdown visible
-// even after `expanded` flips back to false on the second tap.
 function OrderCard({
   entry,
   expandable,
@@ -165,13 +124,6 @@ export default function ActiveOrdersStrip() {
   const [guestOrders, setGuestOrders] = useState<TrackOrderArgs[]>([]);
   const [guestStatuses, setGuestStatuses] = useState<Record<string, string>>({});
 
-  // Loaded client-side only (localStorage isn't available during SSR), and
-  // reset whenever we're not in the guest state (e.g. right after login).
-  // Also re-reads on GUEST_ORDERS_CHANGED_EVENT (fired by lib/guestOrders.ts
-  // right after a guest checkout writes a new order, same tab included) and
-  // on the native "storage" event (fires in other tabs), so a just-placed
-  // order shows up immediately instead of waiting for something else to
-  // cause a re-render.
   useEffect(() => {
     if (!isGuest) {
       setGuestOrders([]);
@@ -233,9 +185,6 @@ export default function ActiveOrdersStrip() {
   const [primary, ...rest] = entries;
   const hasRest = rest.length > 0;
 
-  // Mirrors desktop's hover-to-open dropdown for mobile, where there's no
-  // hover: the chevron button toggles `expanded`, and a tap anywhere outside
-  // the pill closes it again (there's no hover-out to fall back on).
   const stripRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
 

@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
 
-// These row shapes mirror the aggregate SQL aliases below. mysql2 can return
-// numeric aggregates as strings, so we normalize with toNumber() before responding.
 type DailyRow = {
   day: string;
   orders: number | string | null;
@@ -35,7 +33,6 @@ function toNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-// Reject non-numeric input instead of letting NaN flow into a SQL parameter.
 function clampDays(raw: string | null) {
   const parsed = Number(raw ?? "30");
   if (!Number.isFinite(parsed)) {
@@ -48,8 +45,6 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-// Built from local Date methods (not toISOString/UTC) so the calendar days here
-// line up with the server-local DATE_FORMAT() days MySQL groups rows into.
 function lastNDates(days: number) {
   const dates: string[] = [];
   const cursor = new Date();
@@ -63,7 +58,6 @@ function lastNDates(days: number) {
 }
 
 export async function GET(req: Request) {
-  // Middleware also gates /api/admin/*, but every admin route re-checks for real security.
   const guard = await requireAdmin();
   if (guard.response) {
     return guard.response;
@@ -141,7 +135,6 @@ export async function GET(req: Request) {
     for (const row of (dailyRows[0] ?? []) as DailyRow[]) {
       dailyByDay.set(row.day, { orders: toNumber(row.orders), revenue: toNumber(row.revenue) });
     }
-    // Zero-fill every calendar day in the window so gaps (no orders that day) still plot.
     const daily = lastNDates(days).map((date) => ({
       date,
       orders: dailyByDay.get(date)?.orders ?? 0,
@@ -167,7 +160,6 @@ export async function GET(req: Request) {
     for (const row of (peakHourRows[0] ?? []) as PeakHourRow[]) {
       peakHoursByHour.set(Number(row.hour), toNumber(row.orders));
     }
-    // Zero-fill every hour of the day so the chart always has a full 0-23 x-axis.
     const peakHours = Array.from({ length: 24 }, (_, hour) => ({
       hour,
       orders: peakHoursByHour.get(hour) ?? 0,

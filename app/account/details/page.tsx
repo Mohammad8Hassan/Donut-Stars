@@ -70,8 +70,6 @@ export default function AccountDetailsPage() {
       setUser(data.user);
       setSaveMessage("Your account details were updated.");
     } catch {
-      // Network failure, malformed response, etc. — still surface an error
-      // instead of leaving the button silently stuck disabled below.
       setSaveMessage("We couldn't save your changes. Please try again.");
     } finally {
       setSaving(false);

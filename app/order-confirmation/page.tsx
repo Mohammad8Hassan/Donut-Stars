@@ -26,9 +26,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-// Logged-in lookup: a one-shot GET /api/orders (full history, same route
-// app/account/orders/page.tsx uses) filtered down to the id in the URL —
-// unlike active-orders, this still finds the order once it's completed.
 function useAccountOrder(orderId: string | null, enabled: boolean) {
   const [order, setOrder] = useState<AccountOrder | null>(null);
   const [loading, setLoading] = useState(enabled);
@@ -89,18 +86,12 @@ function OrderConfirmationContent() {
 
   const accountLookup = useAccountOrder(orderId, checked && !isGuest);
 
-  // Guest lookup reuses the same public endpoint /track uses — a one-shot
-  // fetch (no pollingInterval) since this page is a confirmation snapshot,
-  // not a live-tracking view. Guests are pointed to /track for that.
   const {
     data: trackedOrder,
     isFetching: trackFetching,
     error: trackError,
   } = useTrackOrderQuery(isGuest && orderId && phone ? { orderId, phone } : skipToken);
 
-  // A guest link only resolves order details when it carries both orderId and
-  // phone (see the redirect built in app/payment/page.tsx). Missing phone
-  // isn't a failed lookup — no lookup was attempted — so it gets its own message.
   const missingGuestPhone = isGuest && !!orderId && !phone;
 
   const order: AccountOrder | TrackedOrder | null = isGuest ? trackedOrder ?? null : accountLookup.order;

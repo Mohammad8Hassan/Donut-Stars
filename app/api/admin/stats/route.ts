@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/session";
+import { advanceOrders } from "@/lib/advanceOrders";
 
-// These row types mirror the aggregate SQL aliases below.
-// The mysql driver can return numeric aggregates as strings, so we normalize later.
 type OverviewRow = {
   total_orders: number | string | null;
   revenue: number | string | null;
@@ -34,16 +33,14 @@ function toNumber(value: unknown) {
 }
 
 export async function GET() {
-  // Every admin analytics endpoint must enforce role checks at the route level,
-  // even though middleware also protects /api/admin/* paths.
   const guard = await requireAdmin();
   if (guard.response) {
     return guard.response;
   }
 
   try {
-    // Overview stats are built from the orders table because that is the operational
-    // source of truth for revenue and fulfillment state.
+    await advanceOrders();
+
     const [overviewRows]: any = await db.query(
       `
       SELECT
@@ -58,8 +55,6 @@ export async function GET() {
       `
     );
 
-    // Customer/admin counts are based on roles so the dashboard can show the size
-    // of the customer base separately from internal staff access.
     const [userRows]: any = await db.query(
       `
       SELECT
@@ -72,7 +67,6 @@ export async function GET() {
       `
     );
 
-    // Product count gives the admin dashboard a quick catalog health snapshot.
     const [productRows]: any = await db.query(
       `
       SELECT COUNT(*) AS active_products
@@ -81,8 +75,6 @@ export async function GET() {
       `
     );
 
-    // A short rolling window gives the dashboard a more actionable signal than
-    // lifetime totals alone.
     const [recentRows]: any = await db.query(
       `
       SELECT
@@ -98,8 +90,6 @@ export async function GET() {
     const products = (productRows?.[0] ?? {}) as ProductSummaryRow;
     const recent = (recentRows?.[0] ?? {}) as RecentSummaryRow;
 
-    // The API returns frontend-friendly camelCase values so the dashboard component
-    // does not need to understand SQL alias naming or type coercion rules.
     return NextResponse.json(
       {
         stats: {
